@@ -245,9 +245,7 @@ fn create_merkle_proof(
 
     // If no outputs, create a single hash from task_id
     let leaves = if output_hashes.is_empty() {
-        let mut hash = [0u8; 32];
-        let task_hash = compute_kernel_hash(&result.task_id);
-        hash = task_hash;
+        let hash = compute_kernel_hash(&result.task_id);
         vec![hash]
     } else {
         output_hashes

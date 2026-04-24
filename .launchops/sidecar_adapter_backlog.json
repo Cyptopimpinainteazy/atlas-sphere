@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-04-23T01:23:10.262898101+00:00",
+  "source_consumer_contracts_file": "rpc_consumer_contracts.json",
+  "backlog": [
+    {
+      "route_id": "bridge-status",
+      "route_label": "Bridge Status",
+      "method": "x3_submitCrossVmTransaction",
+      "backlog_reason": "Bridge submission stays behind the sidecar because queueing, billing, and orchestration remain node-owned.",
+      "ownership_note": "expected mixed ownership: runtime executes the EVM leg while node-local billing and queueing own the orchestration boundary",
+      "notes": [
+        "contains both runtime-backed and node-local behavior; keep frontend integration behind sidecar or adapter ownership"
+      ]
+    },
+    {
+      "route_id": "bridge-status",
+      "route_label": "Bridge Status",
+      "method": "x3_submitSvmTransaction",
+      "backlog_reason": "Bridge submission stays behind the sidecar because queueing, billing, and orchestration remain node-owned.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "governance",
+      "route_label": "Governance Desk",
+      "method": "submitDispute",
+      "backlog_reason": "Governance actions must stay behind a sidecar or signer boundary even when read visibility is frontend-safe.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "network-overview",
+      "route_label": "Network Overview",
+      "method": "gpu_submitProof",
+      "backlog_reason": "Proof submission is an operator or service action, not a direct frontend read contract.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "network-overview",
+      "route_label": "Network Overview",
+      "method": "x3_flashFinalityStatus",
+      "backlog_reason": "Flash finality status should stay sidecar-owned until conditional registration semantics stay intentionally documented and tested.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "atomicTrade_createSwap",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "atomicTrade_estimateSlippage",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "atomicTrade_executeSwap",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "atomicTrade_getSwapQuote",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "atomicTrade_getSwapStatus",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "walletDex_estimateSwap",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "walletDex_executeSwap",
+      "backlog_reason": "Trading and swap flows remain sidecar-owned because they are backed by node-local services rather than stable direct-read contracts.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "x3_estimateGas",
+      "backlog_reason": "Wallet-facing action preparation still depends on adapter-owned semantics and should not bind directly to frontend routes.",
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "method": "x3_isAuthorized",
+      "backlog_reason": "Wallet-facing action preparation still depends on adapter-owned semantics and should not bind directly to frontend routes.",
+      "notes": [
+        "-"
+      ]
+    }
+  ]
+}

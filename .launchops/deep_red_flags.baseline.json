@@ -1,0 +1,29 @@
+{
+  "_comment": "Baseline of accepted LaunchOps deep_red_flags fingerprints. CI gate (scripts/ci/verify_launchops_deep_red_flags_baseline.sh) compares .launchops/deep_red_flags.json against this file and fails on any fingerprint not listed here. To accept a new flag, run the gate with UPDATE_BASELINE=1 and commit this file alongside the human review evidence it represents. Fingerprint = sha256(json.dumps({severity, flag_type, sorted(files)}, sort_keys=True))[:16].",
+  "fingerprints": [
+    {
+      "fingerprint": "7297fdc76ce567f1",
+      "severity": "critical",
+      "flag_type": "test_weakened",
+      "files": [
+        "/dev/null",
+        "X3_RC1_WIRING_PLAN.md",
+        "crates/cross-vm-coordinator/src/merkle_settlement.rs",
+        "crates/x3-opt/src/optimizer.rs",
+        "pallets/x3-kernel/src/tests.rs"
+      ],
+      "accepted_reason": "Pre-existing at baseline seeding (2026-04-23); assertions owed back on merkle_settlement + x3-kernel tests as part of Wave 0 workspace-compile fix. Gate 7 (testing/CI) scorecard yellow."
+    },
+    {
+      "fingerprint": "a60cdf54336395ae",
+      "severity": "critical",
+      "flag_type": "mainnet_config_without_review",
+      "files": [
+        "node/src/service.rs",
+        "runtime/src/lib.rs",
+        "scripts/testnet/package-lock.json"
+      ],
+      "accepted_reason": "Pre-existing at baseline seeding (2026-04-23); launch review evidence owed via X3_LAUNCHOPS_CONTRACT_REVIEW_NOTE.md / docs/mainnet-launch-review.md before mainnet go-live. Gate 1 (consensus/runtime) scorecard yellow."
+    }
+  ]
+}

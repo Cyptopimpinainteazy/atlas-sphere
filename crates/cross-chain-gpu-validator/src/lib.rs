@@ -56,8 +56,11 @@ impl CrossChainValidator {
 
     /// Run the validation loop for cross-chain state-root validation
     pub async fn run_validation_loop(&self) -> Result<(), String> {
-        log::info!("🌐 Starting cross-chain validation loop (protocol v{})", self.protocol_version);
-        
+        log::info!(
+            "🌐 Starting cross-chain validation loop (protocol v{})",
+            self.protocol_version
+        );
+
         // Loop: periodically poll for new EVM/SVM state-roots to validate
         // This is a stub that runs indefinitely until shutdown
         loop {
@@ -86,7 +89,10 @@ pub async fn validate_evm_header(
     _orchestrator: Arc<RwLock<SwarmOrchestrator>>,
 ) -> Result<String, ValidationError> {
     // Stub: Phase 3 will wire actual orchestrator call here
-    log::info!("✓ EVM header validation initiated (block: {})", block_number);
+    log::info!(
+        "✓ EVM header validation initiated (block: {})",
+        block_number
+    );
     Ok(format!("validated_block_{}", block_number))
 }
 

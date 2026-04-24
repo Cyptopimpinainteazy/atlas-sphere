@@ -1,0 +1,412 @@
+{
+  "generated_at": "2026-04-23T01:23:10.262898101+00:00",
+  "rpc_source_file": "node/src/rpc.rs",
+  "runtime_backed_count": 15,
+  "node_local_adapter_count": 11,
+  "placeholder_count": 3,
+  "duplicate_registration_count": 0,
+  "bucket_drift_count": 0,
+  "flags": [],
+  "methods": [
+    {
+      "method": "gpu_orchestratorHealth",
+      "source_file": "node/src/rpc.rs",
+      "line": 115,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "query_orchestrator_health"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::GpuValidatorRuntimeApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "gpu_validatorStatus",
+      "source_file": "node/src/rpc.rs",
+      "line": 136,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "gpu_validator_status"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::GpuValidatorRuntimeApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "gpu_submitProof",
+      "source_file": "node/src/rpc.rs",
+      "line": 159,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "submit_gpu_validator_proof"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::GpuValidatorRuntimeApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "validate_evmHeader",
+      "source_file": "node/src/rpc.rs",
+      "line": 187,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "validate_evm_header"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::CrossChainStateRootApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "validate_svmHeader",
+      "source_file": "node/src/rpc.rs",
+      "line": 231,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "validate_svm_header"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::CrossChainStateRootApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "query_crossChainStatus",
+      "source_file": "node/src/rpc.rs",
+      "line": 274,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "query_cross_chain_status"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::CrossChainStateRootApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "submitDispute",
+      "source_file": "node/src/rpc.rs",
+      "line": 299,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "submit_dispute"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::GovernanceSettlementApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "queryDisputeStatus",
+      "source_file": "node/src/rpc.rs",
+      "line": 337,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "query_dispute_status"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::GovernanceSettlementApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "queryProofFinality",
+      "source_file": "node/src/rpc.rs",
+      "line": 378,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "confirm_settlement_finality"
+      ],
+      "runtime_trait_hints": [
+        "gpu_validator_api::GovernanceSettlementApi<Block>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "requestProofChallenge",
+      "source_file": "node/src/rpc.rs",
+      "line": 415,
+      "bucket": "placeholder",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "placeholder_reason": "structural placeholder until Phase 10b challenge execution is implemented",
+      "frontend_consumer_mode": "mock_only",
+      "sidecar_consumer_mode": "defer"
+    },
+    {
+      "method": "x3_getAssetMetadata",
+      "source_file": "node/src/rpc.rs",
+      "line": 502,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "get_asset_metadata"
+      ],
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "x3_isAuthorized",
+      "source_file": "node/src/rpc.rs",
+      "line": 517,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "is_authorized"
+      ],
+      "runtime_trait_hints": [
+        "pallet_atomic_trade_engine::AtomicTradeEngineApi<Block>",
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "x3_getAuthorizedAccounts",
+      "source_file": "node/src/rpc.rs",
+      "line": 529,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "get_authorized_accounts"
+      ],
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "x3_getAuthorities",
+      "source_file": "node/src/rpc.rs",
+      "line": 545,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "get_authorities"
+      ],
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "x3_getCanonicalBalance",
+      "source_file": "node/src/rpc.rs",
+      "line": 560,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "get_canonical_balance"
+      ],
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "method": "x3_estimateGas",
+      "source_file": "node/src/rpc.rs",
+      "line": 574,
+      "bucket": "runtime_backed",
+      "runtime_calls": [
+        "estimate_evm_gas"
+      ],
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "x3_submitCrossVmTransaction",
+      "source_file": "node/src/rpc.rs",
+      "line": 634,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [
+        "submit_evm_transaction"
+      ],
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [
+        "BillingMiddleware quota path",
+        "async node-local orchestration"
+      ],
+      "ownership_note": "expected mixed ownership: runtime executes the EVM leg while node-local billing and queueing own the orchestration boundary",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "x3_submitSvmTransaction",
+      "source_file": "node/src/rpc.rs",
+      "line": 809,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "BillingMiddleware quota path"
+      ],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "x3_submitX3vmTransaction",
+      "source_file": "node/src/rpc.rs",
+      "line": 885,
+      "bucket": "placeholder",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "placeholder_reason": "intentional guidance error; standalone X3VM submission is unavailable on this build",
+      "frontend_consumer_mode": "mock_only",
+      "sidecar_consumer_mode": "defer"
+    },
+    {
+      "method": "walletDex_estimateSwap",
+      "source_file": "node/src/rpc.rs",
+      "line": 898,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "WalletDexRpc service adapter"
+      ],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "walletDex_executeSwap",
+      "source_file": "node/src/rpc.rs",
+      "line": 939,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "WalletDexRpc service adapter"
+      ],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "atomicTrade_createSwap",
+      "source_file": "node/src/rpc.rs",
+      "line": 992,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "atomicTrade_executeSwap",
+      "source_file": "node/src/rpc.rs",
+      "line": 1039,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "atomicTrade_getSwapQuote",
+      "source_file": "node/src/rpc.rs",
+      "line": 1077,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "atomicTrade_estimateSlippage",
+      "source_file": "node/src/rpc.rs",
+      "line": 1114,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "atomicTrade_getSwapStatus",
+      "source_file": "node/src/rpc.rs",
+      "line": 1137,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "x3_newCore",
+      "source_file": "node/src/rpc.rs",
+      "line": 1151,
+      "bucket": "placeholder",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "placeholder_reason": "not available on this node build",
+      "frontend_consumer_mode": "mock_only",
+      "sidecar_consumer_mode": "defer"
+    },
+    {
+      "method": "x3_flashFinalityStatus",
+      "source_file": "node/src/rpc.rs",
+      "line": 1161,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "async node-local orchestration",
+        "flash finality gadget"
+      ],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "method": "x3_flashFinalityStatus",
+      "source_file": "node/src/rpc.rs",
+      "line": 1178,
+      "bucket": "node_local_adapter",
+      "runtime_calls": [],
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate"
+    }
+  ]
+}

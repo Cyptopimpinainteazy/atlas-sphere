@@ -1,0 +1,34 @@
+[
+  {
+    "severity": "critical",
+    "flag_type": "mainnet_config_without_review",
+    "files": [
+      "node/src/service.rs",
+      "runtime/src/lib.rs",
+      "scripts/testnet/package-lock.json"
+    ],
+    "reason": "Mainnet/testnet config changed without launch review evidence",
+    "required_evidence": [
+      ".launchops/mainnet-review.md",
+      "docs/mainnet-launch-review.md",
+      "docs/launch-gates.md",
+      "MAINNET_REVIEW marker"
+    ]
+  },
+  {
+    "severity": "critical",
+    "flag_type": "test_weakened",
+    "files": [
+      "/dev/null",
+      "X3_RC1_WIRING_PLAN.md",
+      "crates/cross-vm-coordinator/src/merkle_settlement.rs",
+      "crates/x3-opt/src/optimizer.rs",
+      "pallets/x3-kernel/src/tests.rs"
+    ],
+    "reason": "Assertions removed or weakness markers added in test diff",
+    "required_evidence": [
+      "Restore removed assertions",
+      "Remove #[ignore] or replace with invariant/property tests"
+    ]
+  }
+]

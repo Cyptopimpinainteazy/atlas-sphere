@@ -7,7 +7,7 @@ use frame_support::{
 };
 use frame_system::EnsureRoot;
 use pallet_x3_kernel::{MockEvmAdapter, MockSvmAdapter, MockX3Adapter, NoopProofVerifier};
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
     BuildStorage,
@@ -18,6 +18,20 @@ pub type AccountId = u64;
 pub type Balance = u128;
 pub type AssetId = u32;
 pub type AtlasId = u32;
+
+pub struct BridgeEvmEscrowValue;
+impl frame_support::traits::Get<H160> for BridgeEvmEscrowValue {
+    fn get() -> H160 {
+        H160::zero()
+    }
+}
+
+pub struct BridgeSvmEscrowValue;
+impl frame_support::traits::Get<[u8; 32]> for BridgeSvmEscrowValue {
+    fn get() -> [u8; 32] {
+        [0; 32]
+    }
+}
 
 // ─── Shared constants ────────────────────────────────────────────────────────
 parameter_types! {
@@ -109,6 +123,7 @@ parameter_types! {
     pub const CrossVmPrepareTtl: u64 = 100;
     pub const MaxPreparedCrossVmOps: u32 = 64;
     pub const MaxPreparedOpsPerBlock: u32 = 16;
+    pub const MaxReplayPruneItemsPerBlock: u32 = 64;
 }
 
 impl pallet_x3_kernel::Config for Test {
@@ -132,6 +147,7 @@ impl pallet_x3_kernel::Config for Test {
     type CrossVmPrepareTtl = CrossVmPrepareTtl;
     type MaxPreparedCrossVmOps = MaxPreparedCrossVmOps;
     type MaxPreparedOpsPerBlock = MaxPreparedOpsPerBlock;
+    type MaxReplayPruneItemsPerBlock = MaxReplayPruneItemsPerBlock;
     type RequireCrossVmProof = ConstBool<false>;
     type WeightInfo = ();
     type EvmAdapter = MockEvmAdapter;
@@ -139,6 +155,8 @@ impl pallet_x3_kernel::Config for Test {
     type X3Adapter = MockX3Adapter;
     type CrossChainProofVerifier = NoopProofVerifier;
     type GovernanceOrigin = EnsureRoot<AccountId>;
+    type BridgeEvmEscrow = BridgeEvmEscrowValue;
+    type BridgeSvmEscrow = BridgeSvmEscrowValue;
 }
 
 // ─── pallet_x3_coin ──────────────────────────────────────────────────────────

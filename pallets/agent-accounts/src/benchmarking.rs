@@ -1,11 +1,9 @@
 //! Benchmarking for the Agent Accounts pallet.
 
-#![cfg(feature = "runtime-benchmarks")]
-
 use super::*;
 use crate::types::{ActionType, AgentPermissions};
 use frame_benchmarking::v2::*;
-use frame_support::BoundedVec;
+use frame_support::{pallet_prelude::ConstU32, traits::Currency, BoundedVec};
 use frame_system::RawOrigin;
 
 #[benchmarks]
@@ -17,7 +15,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"TestAgent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![0u8; 100].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![0u8; 100].try_into().unwrap();
 
         // Fund caller
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
@@ -32,7 +30,7 @@ mod benchmarks {
         let operator1: T::AccountId = account("operator1", 0, 0);
         let operator2: T::AccountId = account("operator2", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
         let _ = Pallet::<T>::register_agent(
@@ -51,7 +49,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
         let _ = Pallet::<T>::register_agent(
@@ -79,7 +77,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
         let _ =
@@ -101,7 +99,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
         let reason: BoundedVec<u8, ConstU32<256>> = b"Violation".to_vec().try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
@@ -117,7 +115,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
         let reason: BoundedVec<u8, ConstU32<256>> = b"Test".to_vec().try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
@@ -134,7 +132,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
         let _ = Pallet::<T>::register_agent(
@@ -153,7 +151,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
         let _ =
@@ -168,7 +166,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         let operator: T::AccountId = account("operator", 0, 0);
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());
         let _ =
@@ -182,7 +180,7 @@ mod benchmarks {
     fn emit_action() {
         let caller: T::AccountId = whitelisted_caller();
         let name: BoundedVec<u8, ConstU32<64>> = b"Agent".to_vec().try_into().unwrap();
-        let metadata: BoundedVec<u8, T::MaxMetadataLength> = vec![].try_into().unwrap();
+        let metadata: BoundedVec<u8, ConstU32<1024>> = vec![].try_into().unwrap();
         let action_data: BoundedVec<u8, ConstU32<512>> = b"{}".to_vec().try_into().unwrap();
 
         let _ = T::Currency::make_free_balance_be(&caller, 1_000_000u32.into());

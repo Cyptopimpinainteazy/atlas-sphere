@@ -1,0 +1,629 @@
+# X3 LaunchOps Audit Report
+
+## Overall Audit Status
+
+**BLOCKED**
+- audit_multiplier: 0.20
+
+## Changed File Summary
+
+| Category | Count |
+|---|---:|
+| docs | 33 |
+| code | 63 |
+| tests | 2 |
+| consensus | 3 |
+| bridge | 9 |
+| cross_vm | 5 |
+| dex | 0 |
+| gpu | 1 |
+| ops | 5 |
+| mainnet_config | 3 |
+
+## Drift Flags
+
+### [Critical] mainnet_config_without_review
+
+Mainnet/testnet config changed without launch review evidence
+
+Files:
+- `node/src/service.rs`
+- `runtime/src/lib.rs`
+- `scripts/testnet/package-lock.json`
+
+### [Critical] test_weakened
+
+Assertions removed or weakness markers added in test diff
+
+Files:
+- `/dev/null`
+- `X3_RC1_WIRING_PLAN.md`
+- `crates/cross-vm-coordinator/src/merkle_settlement.rs`
+- `crates/x3-opt/src/optimizer.rs`
+- `pallets/x3-kernel/src/tests.rs`
+
+## Requirement Conflicts
+
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:154` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:104`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:155` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:111`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/DEPLOYMENT_STATUS_v1.1.md:216` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TPS_OPTIMIZATION_STRATEGY.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/DEPLOYMENT_STATUS_v1.1.md:216` vs `.kilo/worktrees/childlike-kitchen/docs/tests/PRE_MAINNET_ROADMAP.md:42`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/DEPLOYMENT_STATUS_v1.1.md:216` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:564`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/OPERATOR_HANDOFF_v1.1.md:59` vs `.kilo/worktrees/childlike-kitchen/DEPLOYMENT_STATUS_v1.1.md:216`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/PHASE_8_RETROSPECTIVE_AUDIT.md:308` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:231`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/SHUTDOWN.md:594` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/AGENTS.md:70`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/X3_CODEBASE_ANALYSIS_2026_04_11.md:670` vs `.kilo/worktrees/childlike-kitchen/ATOMIC_CROSSVM_PRODUCTION_READINESS.md:152`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/X3_GOLIVE_CHECKLIST.md:346` vs `context-engineering-intro/use-cases/agent-factory-with-subagents/CLAUDE.md:570`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/AUTONOMIC_INTEGRATION_COMPLETE.md:316` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER9-FUNDING-WAR-PLAN-INTEGRATION.md:485`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/AUTONOMIC_INTEGRATION_COMPLETE.md:319` vs `context-engineering-intro/use-cases/agent-factory-with-subagents/CLAUDE.md:570`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/OWNER_RUNBOOK.md:199` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:294`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/PHASE_45_COMPLETION_SUMMARY.md:311` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/PHASE_45_COMPLETION_SUMMARY.md:311` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/PHASE_45_COMPLETION_SUMMARY.md:311` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/PHASE_45_COMPLETION_SUMMARY.md:311` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/PHASE_45_COMPLETION_SUMMARY.md:311` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/PHASE_45_COMPLETION_SUMMARY.md:312` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:54`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/OPERATOR_DASHBOARD_BOILERPLATE.md:334` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:267`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/YOLO_LOOP_PACK_V1_SESSION_COMPLETE.md:209`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:253` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:77`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:253` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:434`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:354` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCUMENTATION_INDEX.md:392`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:445` vs `.kilo/worktrees/childlike-kitchen/docs/master/roadmaps/P5_STRATEGIC_SUMMARY.md:465`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:445` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/TIER6_7_IMPLEMENTATION_ROADMAP.md:86`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:447` vs `.kilo/worktrees/childlike-kitchen/docs/master/roadmaps/P5_STRATEGIC_SUMMARY.md:465`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:447` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/TIER6_7_IMPLEMENTATION_ROADMAP.md:86`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/STATUS_AND_NEXT_STEPS.md:484` vs `.kilo/worktrees/childlike-kitchen/docs/reports/X3_EXECUTION_ROADMAP.md:135`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52` vs `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_INDEX.md:251`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/DEPLOYMENT_GUIDE.md:393` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:34`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/DEPLOYMENT_GUIDE.md:393` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:38`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/PRODUCTION_CHECKLIST.md:49` vs `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_PRODUCTION_READY.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:255` vs `.kilo/worktrees/childlike-kitchen/docs/master/operations/PRODUCTION_READINESS_CHECKPOINT.md:296`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:256` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/TESTNET_DEPLOYMENT_SUMMARY.md:113`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:256` vs `crates/x3-relayer/VALIDATOR_TOKEN_OPERATIONS.md:712`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:257` vs `.kilo/worktrees/childlike-kitchen/docs/master/operations/PRODUCTION_READINESS_CHECKPOINT.md:298`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:268` vs `.kilo/worktrees/childlike-kitchen/docs/roadmap.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:273` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:394`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:273` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:334`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:273` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:294`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:273` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:380`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_DNS_SERVER_IMPLEMENTATION_COMPLETE.md:244` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:186`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_DNS_SERVER_IMPLEMENTATION_COMPLETE.md:249` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:26`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_DNS_SERVER_IMPLEMENTATION_COMPLETE.md:249` vs `.kilo/worktrees/childlike-kitchen/docs/roadmap.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:23` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_FRONTEND_PROGRESS.md:26`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:275`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:112`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER9-FUNDING-WAR-PLAN-INTEGRATION.md:484`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md:166`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:45` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_IMPLEMENTATION_PLAN.md:43`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:45` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:45` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:1033`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:45` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:45` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:725`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:73` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:11`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:74` vs `PHASE_13_DOCUMENTATION_PRIORITY_QUEUE.md:18`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:74` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_IMPLEMENTATION_PLAN.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:38` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PROGRESS.md:16`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:78` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1307`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:80` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1309`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:81` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1310`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PROGRESS.md:23` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_FRONTEND_PROGRESS.md:25`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PROGRESS.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:26`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_PRODUCTION_READY_REPORT.md:134` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PROGRESS.md:16`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/CARTOGRAPHER_REPORT.md:518` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:228`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:348`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `.kilo/worktrees/childlike-kitchen/apps/dex/PRPs/templates/prp_base.md:199`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `context-engineering-intro/PRPs/EXAMPLE_multi_agent_prp.md:366`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:373`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:187`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/COND_FOLD_EXECUTIVE_SUMMARY.md:336` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/DNS_SERVER_IMPLEMENTATION_FINAL_COMPLETION.md:137` vs `.kilo/worktrees/childlike-kitchen/docs/reports/FUNCTIONAL_ROADMAP.md:593`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/E2E_INTEGRATION_TESTS_FINAL_REPORT.md:43` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_DNS_SERVER_IMPLEMENTATION_COMPLETE.md:242`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/FINAL_ATLAS_SPHERE_IMPLEMENTATION_REPORT.md:159` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PROGRESS.md:16`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/LOOP_PACK_V1_COMPLETE.md:204` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/LOOP_PACK_V1_COMPLETE.md:204` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/LOOP_PACK_V1_COMPLETE.md:204` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/LOOP_PACK_V1_COMPLETE.md:204` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:90`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/LOOP_PACK_V1_COMPLETE.md:204` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:278` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:278` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:278` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:348`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `.kilo/worktrees/childlike-kitchen/apps/dex/PRPs/templates/prp_base.md:199`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `context-engineering-intro/PRPs/EXAMPLE_multi_agent_prp.md:366`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:373`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:187`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_EXECUTIVE_SUMMARY.md:284` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:184` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:90`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:184` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:271` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_DNS_SERVER_IMPLEMENTATION_COMPLETE.md:244`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/reports/OPTIMIZATION_PASS_A_STATUS.md:391`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:476`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:453`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/X3_GOLIVE_CHECKLIST.md:346`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER8-QUICK-REFERENCE.md:425`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_COMPLETION_REPORT.md:222`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:465`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:21` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:32`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:22` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:42`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:23` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:34`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:27` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:38`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:28` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:39`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:30` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:41`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:331`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:45`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/OPTIMIZATION_PASS_A_STATUS.md:391`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:476`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:453`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/X3_GOLIVE_CHECKLIST.md:346`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER8-QUICK-REFERENCE.md:425`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_COMPLETION_REPORT.md:222`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:465`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:36` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:47`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:54` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:38`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_COMPLETION_REPORT.md:210` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:75`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_COMPLETION_REPORT.md:211` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:468`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_SUMMARY.md:139` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_SUMMARY.md:139` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_SUMMARY.md:139` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_SUMMARY.md:139` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_SUMMARY.md:139` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/docs/reports/YOLO_LOOP_PACK_V1_SESSION_COMPLETE.md:210` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/frontend-integration-plan.md:49` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:133`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/frontend-integration-plan.md:55` vs `.kilo/worktrees/childlike-kitchen/docs/reports/FRONTEND_ECOSYSTEM_INTEGRATION.md:170`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation-artifacts/story-1-1-wallet-core.md:80` vs `.kilo/worktrees/childlike-kitchen/docs/reports/FUNCTIONAL_ROADMAP.md:381`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:184`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:228`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVED_SELF_SIGNED.md:172`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:207` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:140`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:207` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:127`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:210` vs `.kilo/worktrees/childlike-kitchen/X3_ARTIFACTS_MANIFEST.md:291`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/infra/README-RPC-ENDPOINTS.md:125` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:212`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/infra/README-RPC-ENDPOINTS.md:125` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:378`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/STATUS_AND_NEXT_STEPS.md:493`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:344`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:188` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:394`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/GPU_SWARM_IMPLEMENTATION_COMPLETION_ARTIFACT.md:345` vs `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:453` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:999`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:470` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/p4-solana-gpu-acceleration/P4_IMPLEMENTATION_GUIDE.md:415`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:484` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:450`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:155` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:155` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:155` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:453` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:306`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/operations/PRODUCTION_READINESS_CHECKPOINT.md:301` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_VERIFICATION_FINAL_REPORT.md:321`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:49`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/tests/PRE_MAINNET_ROADMAP.md:369`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `crates/x3-relayer/MAINNET_VALIDATION.md:452`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:292`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/PRODUCTION_CHECKLIST.md:400`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `crates/x3-relayer/PHASE_13E_MAINNET_PREP.md:379`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md:60`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCUMENTATION_INDEX.md:482`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:40` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:160`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:40` vs `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:255` vs `tools/get-shit-done/agents/gsd-phase-researcher.md:535`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:267` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/STATUS_AND_NEXT_STEPS.md:552`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:268` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:366`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:268` vs `crates/x3-relayer/PHASE_13F_INFRASTRUCTURE_VALIDATION.md:504`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:212` vs `.kilo/worktrees/childlike-kitchen/docs/cross-chain-gpu-validator/tests/inferstructor/PRODUCTION_DEPLOYMENT_GUIDE.md:453`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:214` vs `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:40`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:228` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:90`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:228` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:348`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `.kilo/worktrees/childlike-kitchen/apps/dex/PRPs/templates/prp_base.md:199`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `context-engineering-intro/PRPs/EXAMPLE_multi_agent_prp.md:366`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:373`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:187`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:187` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:188` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:41`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:188` vs `.kilo/worktrees/childlike-kitchen/docs/master/getting-started/PRE_FLIGHT_CHECKLIST.md:21`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:301` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/PRODUCTION_CHECKLIST.md:65`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:310` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:110`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:310` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:109`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/roadmaps/P5_STRATEGIC_SUMMARY.md:460` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:212`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/roadmaps/P5_STRATEGIC_SUMMARY.md:460` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:344`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/status/P4_EXECUTIVE_SUMMARY.md:133` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_STATUS.md:258`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/master/status/P4_EXECUTIVE_SUMMARY.md:135` vs `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:21`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/EXEC-MERKLE-BRIDGE-003/proposal.md:209` vs `X3_BRIDGE_RELAYER_SPECIFICATION.md:566`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-cross-chain-gpu-validator/tasks.md:24` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:212`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/COMPLETION_SUMMARY.md:344` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/tasks.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/COMPLETION_SUMMARY.md:345` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/tasks.md:39`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:374` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:374` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:374` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:374` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:90`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:374` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/FINAL_COMPLETION_REPORT.md:375` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:53`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/tasks.md:28` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/PHASE3_COMPLETION.md:446`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/COMPLETE_DELIVERY.md:344` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PASS_B_ROADMAP.md:214`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/proposal.md:123`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:378` vs `.kilo/worktrees/childlike-kitchen/docs/master/operations/PRODUCTION_READINESS_CHECKPOINT.md:177`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:348`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `.kilo/worktrees/childlike-kitchen/apps/dex/PRPs/templates/prp_base.md:199`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `context-engineering-intro/PRPs/EXAMPLE_multi_agent_prp.md:366`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:373`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:187`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:392` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md:77` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:345`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/proposal.md:104` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/FILE_MANIFEST.md:367`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/proposal.md:116` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:30`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/proposal.md:124` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:138`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/proposal.md:124` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_READINESS_FINAL.md:190`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD.md:296` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_VM_CROSS_CHAIN_100_TRACKER.md:45`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:88` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:111`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:89` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:113`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:98` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:123`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:100` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:125`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:102` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:126`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:264` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:113`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:295` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:293`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:331` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/TIER5_EXECUTION_PLAN.md:159`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:331` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:220`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:343` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:164`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:343` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:165`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:344` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:228`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:353` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:260`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:404` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:255`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:458` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/add-offchain-jury/PHASE4_3_ARCHIVAL_COMPLETE.md:614`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/TIER6_7_IMPLEMENTATION_ROADMAP.md:15` vs `.kilo/worktrees/childlike-kitchen/docs/roadmap.md:19`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/product-brief-atlas-sphere-master-2026-02-13.md:197` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/product-brief-atlas-sphere-master-2026-02-13.md:257`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:30` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:30` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:53` vs `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:21`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:53` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:53` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:53` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:53` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:70` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:70` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:70` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:70` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:115` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:115` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:115` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:212` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:212` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:212` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_IMPLEMENTATION_STATUS.md:66` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_FRONTEND_PROGRESS.md:16`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:110` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:118` vs `.kilo/worktrees/childlike-kitchen/X3_ARTIFACTS_MANIFEST.md:291`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:147` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:15`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DNS_SYSTEM.md:60` vs `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_PRODUCTION_READY.md:25`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DNS_SYSTEM.md:60` vs `.kilo/worktrees/childlike-kitchen/docs/openspec/changes/jury-blockchain-anchoring/COMPLETE_DELIVERY.md:348`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DNS_SYSTEM.md:65` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:26`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DNS_SYSTEM.md:65` vs `.kilo/worktrees/childlike-kitchen/docs/roadmap.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_FRONTEND_PROGRESS.md:27` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/FINAL_ATLAS_SPHERE_IMPLEMENTATION_REPORT.md:146`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_IMPLEMENTATION_PLAN.md:43` vs `.kilo/worktrees/childlike-kitchen/docs/roadmap.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/BRANCH_MERGE_GUIDE.md:287` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/YOLO_LOOP_PACK_V1_SESSION_COMPLETE.md:209`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:307` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:307` vs `.kilo/worktrees/childlike-kitchen/docs/reports/BRANCH_MERGE_GUIDE.md:287`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:307` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:348`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `.kilo/worktrees/childlike-kitchen/apps/dex/PRPs/templates/prp_base.md:199`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `context-engineering-intro/PRPs/EXAMPLE_multi_agent_prp.md:366`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:373`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:187`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_QUICK_REFERENCE.md:308` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:16` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:6`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:20` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:10`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:26` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_IMPLEMENTATION_PLAN.md:33`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:4` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:14`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:5` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:15`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:7` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:17`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:8` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:18`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:9` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:19`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:11` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:21`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:14` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:24`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:15` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:25`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:16` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:26`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:17` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:27`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:19` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:29`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:20` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md:30`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:100` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TPS_INTEGRATION_SUMMARY.md:371`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:100` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PHASE4_DOCUMENTATION_INDEX.md:89`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:100` vs `.kilo/worktrees/childlike-kitchen/docs/AUTONOMIC_INTEGRATION_COMPLETE.md:319`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:100` vs `.kilo/worktrees/childlike-kitchen/X3_GOLIVE_CHECKLIST.md:346`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:100` vs `.kilo/worktrees/childlike-kitchen/X3_ARTIFACTS_MANIFEST.md:291`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:114` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/GPU_SWARM_IMPLEMENTATION_COMPLETION_ARTIFACT.md:345`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:116` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:43`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:120` vs `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:56`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BINARY_TARGET_FIX_TASKLIST.md:21` vs `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:7`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BINARY_TARGET_RESOLUTION_FINAL.md:19` vs `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:7`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:7` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/DNS_SERVER_BINARY_TARGET_RESOLUTION_FINAL.md:14`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:10` vs `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BINARY_TARGET_FIX_TASKLIST.md:102`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:20` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/DNS_SERVER_BINARY_TARGET_RESOLUTION_FINAL.md:21`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:21` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:70`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_BUILD_TASK_LIST.md:21` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:155`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:22` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md:233`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:24` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:35` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:49`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:36` vs `.kilo/worktrees/childlike-kitchen/docs/AUTONOMIC_INTEGRATION_COMPLETE.md:319`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:36` vs `.kilo/worktrees/childlike-kitchen/docs/reports/OPTIMIZATION_PASS_A_STATUS.md:391`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:36` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:476`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_PRODUCTION_READY.md:25` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/getting-started/AUTHENTICATION_SETUP.md:347`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_PRODUCTION_READY.md:31` vs `crates/x3-relayer/PHASE_13F_VERIFICATION_EXERCISES.md:292`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:38` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:16`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:38` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:7`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:38` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:136`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:46` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/E2E_INTEGRATION_TESTS_FINAL_REPORT.md:43`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:79` vs `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:56`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:79` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:49`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/FRAMER_MOTION_FIX_TODO.md:15` vs `.kilo/worktrees/childlike-kitchen/docs/reports/COMPREHENSIVE_TASK_PROGRESS.md:14`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/FUNCTIONAL_ROADMAP.md:891` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:354`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/master/roadmaps/P5_STRATEGIC_SUMMARY.md:466`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:273`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/master/operations/PRODUCTION_READINESS_CHECKPOINT.md:169`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.artifacts/release-v1.1/docs/DEVELOPMENT.md:756`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/FINAL_ATLAS_SPHERE_IMPLEMENTATION_REPORT.md:160`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `crates/x3-relayer/PHASE_13E_MAINNET_PREP.md:69`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/gpu-swarm/COMPLETION_REPORT.md:630`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:317`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:48` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:287`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:56` vs `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:46`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_CHECKLIST.md:56` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/E2E_INTEGRATION_TESTS_COMPLETION_REPORT.md:158`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:9` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:156`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:10` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/CARTOGRAPHER_REPORT.md:502`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:33` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:359`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md:89`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:37` vs `.artifacts/release-v1.1/docs/DEVELOPMENT.md:756`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:37` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PROJECT_STATUS.md:219`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:47`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_IMPLEMENTATION_STATUS.md:66`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:44` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:287`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:52` vs `.kilo/worktrees/childlike-kitchen/docs/reports/E2E_INTEGRATION_TESTS_TODO.md:46`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:54` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:88`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:54` vs `.kilo/worktrees/childlike-kitchen/docs/reports/INTEGRATION_COMPILATION_GUIDE.md:294`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:56` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:56` vs `.kilo/worktrees/childlike-kitchen/docs/reports/DNS_SERVER_PHASE2_ROADMAP.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/INTEGRATION_COMPILATION_GUIDE.md:472` vs `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:32`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:184`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:228`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVED_SELF_SIGNED.md:172`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/MERGE_CHECKLIST.md:216` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_READINESS_FINAL.md:189`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PHASE4_DOCUMENTATION_INDEX.md:89` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:210`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PHASE4_DOCUMENTATION_INDEX.md:89` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:118`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PHASE4_DOCUMENTATION_INDEX.md:89` vs `context-engineering-intro/use-cases/agent-factory-with-subagents/CLAUDE.md:570`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:27` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:73`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:31` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:15`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:35` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:20`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:47` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_FRONTEND_PROGRESS.md:16`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:48` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:40`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:49` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:41`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:50` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:42`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:52` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:49`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:65` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:50`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:66` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:51`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:74` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1310`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:8` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:7`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:11` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:11`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:34`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:19` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:36`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:23` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:39`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:24` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:40`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:25` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:41`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:25` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:24`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:26` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:42`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:26` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_IMPLEMENTATION_STATUS.md:55`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:27` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:43`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:27` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_IMPLEMENTATION_STATUS.md:56`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:27` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:26`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:28` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:44`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:28` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:27`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:31` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:55`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:32` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:56`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:33` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:57`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:33` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:32`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:58`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:35` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:59`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:36` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_STATUS.md:60`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:39` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:158`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:41` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_IMPLEMENTATION_STATUS.md:68`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:42` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:482`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:42` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_TODO.md:160`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:42` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_FINAL_PHASE_PLAN.md:42`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:44` vs `crates/x3-relayer/PHASE_14_OUTLINE.md:34`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:44` vs `.kilo/worktrees/childlike-kitchen/docs/master/roadmaps/P3_QUICK_REFERENCE.md:520`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1307` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_DEFI_IMPLEMENTATION_STATUS.md:75`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1309` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PRODUCTION_FINALIZATION_TODO.md:56`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PROJECT_STATUS.md:215` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:115`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/PROJECT_STATUS.md:215` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:212`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK.md:217` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK.md:217` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK.md:217` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK.md:217` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:90`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK.md:217` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:157` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:157` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:157` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:157` vs `PHASE_9_PLAN.md:305`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:157` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:158` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:158` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:158` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:159` vs `X3_PHASE13B_INTEGRATION_TESTS.md:389`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:159` vs `.kilo/worktrees/childlike-kitchen/docs/reports/L1-01-OPERATOR-REGISTRY.md:864`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:159` vs `.kilo/worktrees/childlike-kitchen/docs/implementation/IMPLEMENTATION_PLAN.md:196`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TASK_PROGRESS.md:23` vs `.kilo/worktrees/childlike-kitchen/docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md:160`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TESTNET_DEPLOYMENT_CHECKLIST_OPENSPEC.md:48` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TESTNET_DEPLOYMENT_CHECKLIST_OPENSPEC.md:130` vs `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:10`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TESTNET_DEPLOYMENT_CHECKLIST_OPENSPEC.md:224` vs `.kilo/worktrees/childlike-kitchen/docs/reports/IMPLEMENTATION_AUDIT_TASK_LIST.md:54`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TESTNET_DEPLOYMENT_CHECKLIST_OPENSPEC.md:224` vs `.kilo/worktrees/childlike-kitchen/.specstory/history/2026-02-26_20-00Z-.md:111`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:328` vs `.kilo/worktrees/childlike-kitchen/docs/planning-artifacts/PRD_COMPLETE_PROJECT.md:258`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:329` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/PRODUCTION_CHECKLIST.md:66`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:334` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:51`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:345` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DEPLOYMENT_CHECKLIST.md:510`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:380` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PROJECT_STATUS.md:219`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TIER8-QUICK-REFERENCE.md:425` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PASS_B_ROADMAP.md:214`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/TPS_INTEGRATION_SUMMARY.md:371` vs `context-engineering-intro/use-cases/agent-factory-with-subagents/CLAUDE.md:570`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/reports/X3_QUICK_START.md:38` vs `.kilo/worktrees/childlike-kitchen/docs/reports/X3_MILESTONE_TRACKING.md:58`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/roadmap.md:262` vs `.kilo/worktrees/childlike-kitchen/docs/reports/PRODUCTION_READINESS_TODO.md:1309`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/TESTNET_DEPLOYMENT_SUMMARY.md:149`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md:28`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:267`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:468` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:277`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:468` vs `.kilo/worktrees/childlike-kitchen/docs/OWNER_RUNBOOK.md:202`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVED_SELF_SIGNED.md:172` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:90`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVED_SELF_SIGNED.md:172` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/CUSTODY_SERVICE_DEPLOYMENT_OPS.md:52`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_READINESS_FINAL.md:189` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:202`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_READINESS_FINAL.md:189` vs `.kilo/worktrees/childlike-kitchen/docs/architecture/DATA_WIRING_GUIDE.md:465`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_READINESS_FINAL.md:190` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:399`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_PRE_DEPLOYMENT_CHECKLIST.md:313` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:394`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:482` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:40`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:489` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/FULL_SHIPPING_READY.md:38`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/docs/reports/OPTIMIZATION_PASS_A_STATUS.md:391`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:476`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P3_IMPLEMENTATION_SUMMARY.md:453`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/X3_GOLIVE_CHECKLIST.md:346`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER8-QUICK-REFERENCE.md:425`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/SESSION_COMPLETION_REPORT.md:222`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:465`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:331` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ATLAS_SPHERE_IMPLEMENTATION_PLAN.md:43`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:331` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PLAN_SUMMARY.md:190`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:331` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:1033`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:331` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_CHECKLIST.md:496`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/runbooks/testing/VALIDATION_COMPLETE.md:331` vs `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:725`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/security/CUSTODY_SERVICE_SECURITY_AUDIT.md:429` vs `.kilo/worktrees/childlike-kitchen/docs/reports/BRANCH_MERGE_GUIDE.md:287`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/security/CUSTODY_SERVICE_SECURITY_AUDIT.md:429` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/tests/PRE_MAINNET_ROADMAP.md:42` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:302`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/tests/PRE_MAINNET_ROADMAP.md:42` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:278`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/tests/PRE_MAINNET_ROADMAP.md:80` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/README.md:256`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:29` vs `.kilo/worktrees/childlike-kitchen/docs/reports/ACCOMPLISHMENTS.md:125`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:386` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_READINESS_FINAL.md:189`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:399` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:205`
+- **High** conflicting_requirement — `.kilo/worktrees/childlike-kitchen/scripts/p4_utils/DAY1_CHECKLIST.md:8` vs `.kilo/worktrees/equatorial-brand/scripts/p4_utils/DAY1_CHECKLIST.md:8`
+- **High** conflicting_requirement — `.kilo/worktrees/equatorial-brand/.artifacts/release-v1.1/docs/X3_RELEASE_READINESS_CHECKLIST.md:252` vs `.kilo/worktrees/childlike-kitchen/PHASE_8_RETROSPECTIVE_AUDIT.md:47`
+- **High** conflicting_requirement — `PHASE_13E_COMPLETION.md:271` vs `crates/x3-relayer/PHASE_13F_COMPLETION_DECLARATION.md:199`
+- **High** conflicting_requirement — `PHASE_13E_COMPLETION.md:271` vs `crates/x3-relayer/VALIDATOR_TOKEN_OPERATIONS.md:702`
+- **High** conflicting_requirement — `PHASE_13E_COMPLETION.md:281` vs `.kilo/worktrees/childlike-kitchen/docs/apps/x3-desktop/public/docs/DOCUMENTATION_INDEX.md:482`
+- **High** conflicting_requirement — `PHASE_13E_COMPLETION.md:282` vs `crates/x3-relayer/MAINNET_VALIDATION.md:453`
+- **High** conflicting_requirement — `PHASE_13_DELIVERY_SUMMARY.md:340` vs `PROGRESS.md:188`
+- **High** conflicting_requirement — `PHASE_13_DELIVERY_SUMMARY.md:340` vs `crates/x3-relayer/PHASE_13F_COMPLETION_DECLARATION.md:75`
+- **High** conflicting_requirement — `PHASE_13_DELIVERY_SUMMARY.md:340` vs `PHASE_13F_GAP_ANALYSIS.md:233`
+- **High** conflicting_requirement — `PHASE_13_DELIVERY_SUMMARY.md:341` vs `PROGRESS.md:189`
+- **High** conflicting_requirement — `PHASE_13_DELIVERY_SUMMARY.md:345` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/PRODUCTION_DEPLOYMENT_STATUS.md:297`
+- **High** conflicting_requirement — `PHASE_13_DOCUMENTATION_PRIORITY_QUEUE.md:18` vs `.kilo/worktrees/childlike-kitchen/docs/cross-chain-gpu-validator/tests/inferstructor/INTEGRATION_GUIDE.md:584`
+- **High** conflicting_requirement — `PHASE_9_PLAN.md:305` vs `.kilo/worktrees/childlike-kitchen/docs/reports/COND_FOLD_INDEX.md:251`
+- **High** conflicting_requirement — `PROGRESS.md:194` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_VERIFICATION_COMPLETE.md:204`
+- **High** conflicting_requirement — `X3_PHASE13B_INTEGRATION_TESTS.md:389` vs `.kilo/worktrees/childlike-kitchen/docs/master/implementation/P4_IMPLEMENTATION_SUMMARY.md:155`
+- **High** conflicting_requirement — `X3_PHASE13B_INTEGRATION_TESTS.md:389` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:184`
+- **High** conflicting_requirement — `X3_PHASE13B_INTEGRATION_TESTS.md:389` vs `.kilo/worktrees/childlike-kitchen/docs/master/releases/PHASE5_EXECUTION_COMPLETE.md:228`
+- **High** conflicting_requirement — `X3_PHASE13B_INTEGRATION_TESTS.md:389` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVED_SELF_SIGNED.md:172`
+- **High** conflicting_requirement — `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/YOLO_LOOP_PACK_V1_SESSION_COMPLETE.md:209`
+- **High** conflicting_requirement — `context-engineering-intro/use-cases/agent-factory-with-subagents/CLAUDE.md:570` vs `.kilo/worktrees/childlike-kitchen/X3_ARTIFACTS_MANIFEST.md:291`
+- **High** conflicting_requirement — `context-engineering-intro/use-cases/agent-factory-with-subagents/PRPs/templates/prp_pydantic_ai_base.md:220` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/DNS_SERVER_IMPLEMENTATION_FINAL_COMPLETION.md:140`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13E_MAINNET_PREP.md:46` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/ATLAS_SPHERE_100_PERCENT_COMPLETE.md:74`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13E_MAINNET_PREP.md:46` vs `.kilo/worktrees/childlike-kitchen/docs/cross-chain-gpu-validator/tests/inferstructor/INTEGRATION_GUIDE.md:584`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_COMPLETION_DECLARATION.md:256` vs `.kilo/worktrees/childlike-kitchen/docs/deployment/PRODUCTION_CHECKLIST.md:390`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_INFRASTRUCTURE_VALIDATION.md:498` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER5_FINAL_DELIVERY_VALIDATION.md:345`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `.kilo/worktrees/childlike-kitchen/docs/validation_checklist.md:348`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `.kilo/worktrees/childlike-kitchen/apps/dex/PRPs/templates/prp_base.md:199`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `context-engineering-intro/PRPs/EXAMPLE_multi_agent_prp.md:366`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `.kilo/worktrees/childlike-kitchen/PRPs/templates/prp_base.md:196`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `.kilo/worktrees/childlike-kitchen/SETTLEMENT_ENGINE_ISSUES.md:373`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `.kilo/worktrees/childlike-kitchen/docs/reports/EPIC1-DAILY-CHECKLIST.md:187`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:94` vs `context-engineering-intro/claude-code-full-guide/.claude/agents/validation-gates.md:35`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:982` vs `.artifacts/release-v1.1/docs/X3_RELEASE_READINESS_CHECKLIST.md:410`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md:999` vs `.kilo/worktrees/childlike-kitchen/docs/runbooks/deployment/TIER5_DEPLOYMENT_APPROVALS.md:465`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_13F_QUICK_REFERENCE_GUIDE.md:169` vs `.kilo/worktrees/childlike-kitchen/docs/docs/reports/PHASE2_FINAL_VERIFICATION.md:274`
+- **High** conflicting_requirement — `crates/x3-relayer/PHASE_14_OUTLINE.md:34` vs `.kilo/worktrees/childlike-kitchen/docs/reports/TIER8-IMPLEMENTATION-CHECKLIST.md:211`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:54`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:55`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:78`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:79`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:91`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:177`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:159` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:178`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:54`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:55`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:78`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:79`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:91`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:177`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:160` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:178`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:54`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:55`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:78`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:79`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:91`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:177`
+- **High** conflicting_requirement — `tools/get-shit-done/get-shit-done/templates/roadmap.md:161` vs `tools/get-shit-done/get-shit-done/templates/roadmap.md:178`
+
+## Stale Docs
+
+- `tools/get-shit-done/.github/pull_request_template.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-codebase-mapper.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-debugger.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-executor.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-integration-checker.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-nyquist-auditor.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-phase-researcher.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-plan-checker.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-planner.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-project-researcher.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-research-synthesizer.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-roadmapper.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-ui-auditor.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-ui-checker.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-ui-researcher.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/agents/gsd-verifier.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/commands/gsd/debug.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/commands/gsd/map-codebase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/commands/gsd/reapply-patches.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/commands/gsd/research-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/references/continuation-format.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/references/questioning.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/references/verification-patterns.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/UI-SPEC.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/VALIDATION.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/discovery.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/milestone-archive.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/milestone.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/phase-prompt.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/planner-subagent-prompt.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/project.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/requirements.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/research-project/FEATURES.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/research-project/PITFALLS.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/roadmap.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/templates/user-setup.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/add-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/add-tests.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/add-todo.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/audit-milestone.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/autonomous.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/check-todos.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/cleanup.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/complete-milestone.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/diagnose-issues.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/execute-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/insert-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/new-milestone.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/new-project.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/pause-work.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/plan-milestone-gaps.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/plan-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/progress.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/quick.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/remove-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/resume-project.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/settings.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/stats.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/transition.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/ui-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/ui-review.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/update.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/validate-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/verify-phase.md` — Doc older than linked code by more than 30 days
+- `tools/get-shit-done/get-shit-done/workflows/verify-work.md` — Doc older than linked code by more than 30 days

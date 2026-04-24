@@ -594,13 +594,16 @@ class InferstructorAPI {
   async adminLogin(password: string): Promise<{ token: string; expires_in: number }> {
     try {
       // Step 1: Fetch CSRF token first
-      await this.fetchCSRFToken();
+      const csrfToken = await this.fetchCSRFToken();
+      if (!csrfToken) {
+        throw new Error('CSRF token unavailable');
+      }
       
       // Step 2: Send login request with CSRF token
       const response = await axios.post(
         `${ADMIN_URL}/admin/login`,
         { password },
-        { headers: { 'X-CSRF-Token': this.csrfToken || '' } }
+        { headers: { 'X-CSRF-Token': csrfToken } }
       );
       
       if (response.data.success) {
@@ -615,6 +618,9 @@ class InferstructorAPI {
       throw new Error('Admin login failed');
     } catch (error) {
       this.adminLogout();
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        throw new Error('Admin login failed: CSRF validation failed');
+      }
       throw error;
     }
   }

@@ -5,7 +5,6 @@
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use std::time::{Duration, Instant};
 
     /// Enhanced stress test with real-time metrics
@@ -53,13 +52,13 @@ mod tests {
                 for _ in 0..to_submit {
                     self.tasks_submitted += 1;
                     // Simulate task with variable latency
-                    let latency = (1.0 + (self.tasks_submitted % 10) as f64);
+                    let latency = 1.0 + (self.tasks_submitted % 10) as f64;
                     self.latencies.push(latency);
                     self.tasks_completed += 1;
                 }
 
-                // Periodic measurement (every 1 second)
-                if last_measurement.elapsed() >= Duration::from_secs(1) {
+                // Periodic measurement using the configured window size.
+                if last_measurement.elapsed() >= Duration::from_secs(self.window_size_secs) {
                     let elapsed_total = test_start.elapsed().as_secs_f64();
                     let current_tps = self.tasks_completed as f64 / elapsed_total;
                     current_tps_samples.push((last_measurement.elapsed().as_secs(), current_tps));
@@ -70,13 +69,15 @@ mod tests {
                 let iteration_time = (1_000_000.0 / self.target_tps as f64) as u64;
                 let elapsed = interval_start.elapsed();
                 if elapsed.as_micros() < iteration_time as u128 {
-                    tokio::time::sleep(Duration::from_micros(iteration_time as u64) - elapsed)
-                        .await;
+                    tokio::time::sleep(Duration::from_micros(iteration_time) - elapsed).await;
                 }
             }
 
             // Print TPS samples
-            println!("\n=== Real-time TPS Samples (1s intervals) ===");
+            println!(
+                "\n=== Real-time TPS Samples ({}s intervals) ===",
+                self.window_size_secs
+            );
             for (idx, (_, tps)) in current_tps_samples.iter().enumerate() {
                 println!("  Window {}: {:.0} TPS", idx + 1, tps);
             }
@@ -230,8 +231,8 @@ mod tests {
                 test.tasks_completed += 1;
             }
 
-            // Measure TPS every 5 seconds
-            if last_window_time.elapsed() >= Duration::from_secs(5) {
+            // Measure TPS using the configured window size.
+            if last_window_time.elapsed() >= Duration::from_secs(test.window_size_secs) {
                 let tasks_this_window = test.tasks_completed - last_count;
                 let window_tps =
                     tasks_this_window as f64 / last_window_time.elapsed().as_secs_f64();
@@ -246,7 +247,7 @@ mod tests {
             let iteration_time = (1_000_000.0 / test.target_tps as f64) as u64;
             let elapsed = interval_start.elapsed();
             if elapsed.as_micros() < iteration_time as u128 {
-                tokio::time::sleep(Duration::from_micros(iteration_time as u64) - elapsed).await;
+                tokio::time::sleep(Duration::from_micros(iteration_time) - elapsed).await;
             }
         }
 

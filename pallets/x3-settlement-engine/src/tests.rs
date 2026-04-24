@@ -355,8 +355,8 @@ mod tests {
                 vec![],
             ));
 
-            let lock_before =
-                crate::AtomicLocks::<Test>::get(intent_id).expect("Lock should exist after lock_escrow");
+            let lock_before = crate::AtomicLocks::<Test>::get(intent_id)
+                .expect("Lock should exist after lock_escrow");
 
             // Verify lock is in LockedForCommit phase
             match lock_before.phase {

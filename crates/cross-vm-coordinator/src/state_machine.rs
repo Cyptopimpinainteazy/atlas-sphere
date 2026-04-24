@@ -930,12 +930,8 @@ mod state_machine_regression_tests {
             "limit must apply after filtering for stale terminal sessions"
         );
 
-        let second_batch = coordinator.next_stale_terminal_session_batch(
-            now,
-            max_age,
-            Some("swap-004-stale"),
-            2,
-        );
+        let second_batch =
+            coordinator.next_stale_terminal_session_batch(now, max_age, Some("swap-004-stale"), 2);
         assert_eq!(second_batch, vec!["swap-006-stale".to_string()]);
     }
 }

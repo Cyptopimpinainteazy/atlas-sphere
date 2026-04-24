@@ -6,7 +6,7 @@ use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PR
 use futures_util::StreamExt;
 use parallel_proposer::{extract_tx_metadata, ParallelProposerFactory};
 use poh_generator::PoHState;
-use sc_client_api::{Backend, BlockBackend, BlockchainEvents};
+use sc_client_api::{Backend, BlockBackend, BlockchainEvents, HeaderBackend};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
@@ -29,7 +29,18 @@ use x3_bridge_adapters::{
     OffchainEscrowPersistence, PalletEscrowAdapter, RuntimeCrossVmDispatcher,
     SubstrateClientBalanceAdapter,
 };
-use x3_cross_vm_bridge::CrossVmBridge;
+use x3_chain_runtime::{opaque::Block, RuntimeApi};
+use x3_cross_vm_bridge::{CrossVmBridge, CrossVmResult};
+use x3_finality_oracle::{
+    Chain as FinalityChain, FinalityOracle, FinalityRule, FinalityStatus, InMemoryFinalityOracle,
+    ObservedBlock,
+};
+use x3_gateway_risk_engine::{GatewayRiskEngine, RiskPolicy, RouteRiskInput};
+use x3_proof_dispute::{DisputeStatus, DisputeTracker};
+use x3_validator_attestation::{Attestation, AttestationSet, ValidatorId};
+use x3_verification_router::{
+    NonEmptyPayloadVerifier, ProofEnvelope, ProofKind, VerificationRouter,
+};
 
 #[cfg(feature = "gpu-validator")]
 use x3_gpu_validator_swarm::{
@@ -306,11 +317,14 @@ pub fn new_partial(
 ///   experimental Flash Finality gadget flag is active. This helper exists so
 ///   that unit tests can verify the decision logic without spawning a full node.
 pub fn compute_enable_grandpa(config: &Configuration, feature_flags: NodeFeatureFlags) -> bool {
-    let mut enable = !config.disable_grandpa;
-    if feature_flags.enable_flash_finality {
-        enable = false;
-    }
-    enable
+    compute_enable_grandpa_from_flags(config.disable_grandpa, feature_flags)
+}
+
+fn compute_enable_grandpa_from_flags(
+    disable_grandpa: bool,
+    feature_flags: NodeFeatureFlags,
+) -> bool {
+    !disable_grandpa && !feature_flags.enable_flash_finality
 }
 
 fn enforce_startup_gate_if_authority(is_authority: bool) -> Result<(), ServiceError> {
@@ -323,6 +337,151 @@ fn enforce_startup_gate_if_authority(is_authority: bool) -> Result<(), ServiceEr
             "Startup determinism gate failed; refusing authority startup: {err}"
         ))
     })
+}
+
+struct CrossVmBridgeSafetyGate {
+    finality_oracle: InMemoryFinalityOracle,
+    verification_router: VerificationRouter,
+    risk_engine: GatewayRiskEngine,
+}
+
+impl Default for CrossVmBridgeSafetyGate {
+    fn default() -> Self {
+        let mut finality_oracle = InMemoryFinalityOracle::new();
+        finality_oracle.set_rule(
+            FinalityChain::Other(0),
+            FinalityRule {
+                min_confirmations: 1,
+                max_allowed_reorg_depth: 0,
+            },
+        );
+
+        let mut verification_router = VerificationRouter::new();
+        verification_router
+            .register_verifier(ProofKind::EvmReceipt, Arc::new(NonEmptyPayloadVerifier));
+        verification_router.register_verifier(
+            ProofKind::SolanaCommitment,
+            Arc::new(NonEmptyPayloadVerifier),
+        );
+        verification_router
+            .register_verifier(ProofKind::Generic, Arc::new(NonEmptyPayloadVerifier));
+
+        Self {
+            finality_oracle,
+            verification_router,
+            risk_engine: GatewayRiskEngine::new(RiskPolicy::default()),
+        }
+    }
+}
+
+impl CrossVmBridgeSafetyGate {
+    fn preflight(
+        &self,
+        bridge: &CrossVmBridge,
+        best_number: u64,
+        finalized_number: u64,
+        recent_failures: u32,
+    ) -> Result<(), String> {
+        if bridge.is_paused() {
+            return Err("bridge_paused".to_string());
+        }
+
+        if bridge.pending_count() == 0 {
+            return Ok(());
+        }
+
+        let confirmations = best_number.saturating_sub(finalized_number);
+        let verdict = self.finality_oracle.evaluate(ObservedBlock {
+            chain: FinalityChain::Other(0),
+            height: best_number,
+            confirmations,
+            observed_reorg_depth: 0,
+        });
+
+        if verdict.status != FinalityStatus::Finalized {
+            return Err(format!(
+                "finality_not_ready: status={:?}, best={}, finalized={}",
+                verdict.status, best_number, finalized_number
+            ));
+        }
+
+        let decision = self.risk_engine.evaluate(RouteRiskInput {
+            value_usd: (bridge.pending_count() as u64).saturating_mul(10_000),
+            recent_failures,
+            verifier_quorum_met: true,
+        });
+
+        if decision.allow_route {
+            Ok(())
+        } else {
+            Err(format!("risk_gate_blocked: {}", decision.reason))
+        }
+    }
+
+    fn postflight(&self, results: &[CrossVmResult]) -> Result<(), String> {
+        if results.is_empty() {
+            return Ok(());
+        }
+
+        let statement_hash = [0xABu8; 32];
+        let mut attestations = AttestationSet::new(statement_hash);
+        let mut successful_results = 0u64;
+
+        for (idx, result) in results.iter().enumerate() {
+            if !result.success {
+                return Err("execution_failed".to_string());
+            }
+
+            if result.output.is_empty() {
+                return Err("empty_success_output".to_string());
+            }
+
+            successful_results = successful_results.saturating_add(1);
+            let kind = if result.output.starts_with(b"EVM") {
+                ProofKind::EvmReceipt
+            } else if result.output.starts_with(b"SVM") {
+                ProofKind::SolanaCommitment
+            } else {
+                ProofKind::Generic
+            };
+
+            self.verification_router
+                .route(&ProofEnvelope {
+                    kind,
+                    payload: result.output.clone(),
+                    source_chain: 0,
+                    destination_chain: 0,
+                })
+                .map_err(|err| format!("verification_error: {err}"))?;
+
+            attestations
+                .add_attestation(Attestation {
+                    validator: ValidatorId(format!("bridge-result-{idx}")),
+                    statement_hash,
+                    signature: result.gas_used.to_le_bytes().to_vec(),
+                    weight: 1,
+                })
+                .map_err(|err| format!("attestation_error: {err:?}"))?;
+        }
+
+        if !attestations.has_quorum(successful_results) {
+            return Err("attestation_quorum_not_met".to_string());
+        }
+
+        Ok(())
+    }
+
+    fn open_dispute(&self, marker: [u8; 32], now: u64) -> Result<DisputeStatus, String> {
+        let mut tracker = DisputeTracker::new(marker, now, 1)
+            .map_err(|err| format!("dispute_init_failed: {err:?}"))?;
+        tracker
+            .vote("node-crossvm-safety", true)
+            .map_err(|err| format!("dispute_vote_failed: {err:?}"))?;
+        let closed = tracker
+            .close(now.saturating_add(1), 1)
+            .map_err(|err| format!("dispute_close_failed: {err:?}"))?;
+        Ok(closed.status)
+    }
 }
 
 /// Start a new X3 Chain full node with complete consensus and networking
@@ -819,10 +978,10 @@ pub fn new_full(
                     // cross-VM bridge poller backed by RuntimeCrossVmDispatcher,
                     // so pending EVM/SVM operations are actually submitted to the
                     // runtime rather than discarded inside a 1-hour sleep loop.
-                    let dispatcher =
-                        Arc::new(RuntimeCrossVmDispatcher::new(client.clone()));
-                    let bridge =
-                        Arc::new(std::sync::Mutex::new(CrossVmBridge::new()));
+                    let dispatcher = Arc::new(RuntimeCrossVmDispatcher::new(client.clone()));
+                    let bridge = Arc::new(std::sync::Mutex::new(CrossVmBridge::new()));
+                    let bridge_safety_gate = CrossVmBridgeSafetyGate::default();
+                    let client_for_bridge = client.clone();
                     // Keep escrow_adapter alive for the duration of the task.
                     let _escrow = escrow_adapter.clone();
                     let bridge_for_task = bridge.clone();
@@ -830,6 +989,7 @@ pub fn new_full(
                         "cross-vm-bridge-poller",
                         Some("x3"),
                         async move {
+                            let mut recent_failures: u32 = 0;
                             loop {
                                 tokio::time::sleep(Duration::from_millis(200)).await;
                                 // Lock is acquired and released within this block;
@@ -837,17 +997,51 @@ pub fn new_full(
                                 let mut b = bridge_for_task
                                     .lock()
                                     .expect("cross-vm bridge lock poisoned");
+
+                                let info = client_for_bridge.info();
+                                let best_number: u64 = info.best_number.saturated_into();
+                                let finalized_number: u64 = info.finalized_number.saturated_into();
+
+                                if let Err(reason) = bridge_safety_gate.preflight(
+                                    &b,
+                                    best_number,
+                                    finalized_number,
+                                    recent_failures,
+                                ) {
+                                    if reason != "bridge_paused" {
+                                        recent_failures = recent_failures.saturating_add(1);
+                                        log::warn!("[cross-vm] preflight blocked execution: {}", reason);
+                                    }
+                                    continue;
+                                }
+
                                 match b.execute_pending_with_dispatcher(
                                     dispatcher.as_ref(),
                                 ) {
                                     Ok(results) if !results.is_empty() => {
-                                        log::debug!(
-                                            "[cross-vm] executed {} pending bridge ops",
-                                            results.len()
-                                        );
+                                        if let Err(reason) = bridge_safety_gate.postflight(&results) {
+                                            recent_failures = recent_failures.saturating_add(1);
+                                            b.pause();
+                                            let marker = BlakeTwo256::hash_of(&reason).to_fixed_bytes();
+                                            let dispute_status = bridge_safety_gate
+                                                .open_dispute(marker, best_number)
+                                                .unwrap_or(DisputeStatus::Open);
+                                            log::warn!(
+                                                "[cross-vm] postflight rejected batch (status={:?}): {}; bridge paused",
+                                                dispute_status,
+                                                reason
+                                            );
+                                        } else {
+                                            recent_failures = 0;
+                                            log::debug!(
+                                                "[cross-vm] executed {} pending bridge ops",
+                                                results.len()
+                                            );
+                                        }
                                     }
                                     Ok(_) => {}
                                     Err(e) => {
+                                        recent_failures = recent_failures.saturating_add(1);
                                         log::warn!(
                                             "[cross-vm] bridge poll error: {:?}",
                                             e
@@ -903,12 +1097,10 @@ pub fn new_full(
     #[cfg(feature = "gpu-validator")]
     if feature_flags.enable_gpu_validator {
         use x3_cross_chain_gpu_validator::CrossChainValidator;
-        
-        let cross_chain_validator = CrossChainValidator::new(
-            orchestrator.clone(),
-            config.network.protocol_version,
-        );
-        
+
+        let cross_chain_validator =
+            CrossChainValidator::new(orchestrator.clone(), config.network.protocol_version);
+
         // Spawn cross-chain validation task
         task_manager.spawn_essential_handle().spawn(
             "cross-chain-gpu-validator",
@@ -924,9 +1116,11 @@ pub fn new_full(
                 }
             }),
         );
-        
+
         // Export for RPC layer
-        task_manager.extension().insert(cross_chain_validator.clone());
+        task_manager
+            .extension()
+            .insert(cross_chain_validator.clone());
         log::debug!("🌐 Cross-chain validator reference exported for RPC");
     }
 
@@ -1036,6 +1230,7 @@ async fn run_flash_finality_voter<Client, Block>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use x3_cross_vm_bridge::CrossVmResult;
 
     #[test]
     fn startup_gate_is_skipped_for_non_authorities() {
@@ -1045,6 +1240,57 @@ mod tests {
     #[test]
     fn startup_gate_passes_for_reference_authority_build() {
         assert!(enforce_startup_gate_if_authority(true).is_ok());
+    }
+
+    #[test]
+    fn grandpa_stays_enabled_without_disable_flag_or_flash_finality() {
+        assert!(compute_enable_grandpa_from_flags(
+            false,
+            NodeFeatureFlags::default(),
+        ));
+    }
+
+    #[test]
+    fn grandpa_is_disabled_when_config_disables_it() {
+        assert!(!compute_enable_grandpa_from_flags(
+            true,
+            NodeFeatureFlags::default(),
+        ));
+    }
+
+    #[test]
+    fn grandpa_is_disabled_when_flash_finality_is_enabled() {
+        let mut feature_flags = NodeFeatureFlags::default();
+        feature_flags.enable_flash_finality = true;
+
+        assert!(!compute_enable_grandpa_from_flags(false, feature_flags));
+    }
+
+    #[test]
+    fn cross_vm_safety_preflight_rejects_when_bridge_paused() {
+        let gate = CrossVmBridgeSafetyGate::default();
+        let mut bridge = CrossVmBridge::new();
+        bridge.pause();
+        let blocked = gate.preflight(&bridge, 10, 9, 0);
+        assert!(blocked.is_err());
+    }
+
+    #[test]
+    fn cross_vm_safety_postflight_rejects_empty_success_output() {
+        let gate = CrossVmBridgeSafetyGate::default();
+        let results = vec![CrossVmResult::success(Vec::new(), 21_000)];
+        let blocked = gate.postflight(&results);
+        assert!(blocked.is_err());
+    }
+
+    #[test]
+    fn cross_vm_safety_postflight_accepts_non_empty_outputs() {
+        let gate = CrossVmBridgeSafetyGate::default();
+        let results = vec![
+            CrossVmResult::success(b"EVM:receipt:ok".to_vec(), 21_000),
+            CrossVmResult::success(b"SVM:receipt:ok".to_vec(), 5_000),
+        ];
+        assert!(gate.postflight(&results).is_ok());
     }
 }
 

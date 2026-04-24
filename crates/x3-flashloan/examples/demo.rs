@@ -1,3 +1,5 @@
+use x3_court::court::{ConsensusBlock, ConsensusChainState};
+use x3_court::types::{ChallengePayload, ChallengeType};
 use x3_court::{Court, CourtConfig, DisputeType, Verdict};
 use x3_flashloan::types::{AssetId, ChainKind};
 use x3_flashloan::{BorrowPurpose, BorrowRequest, FlashloanPool, SettlementEngine};
@@ -88,7 +90,9 @@ fn main() {
     );
 
     // 4) File a dispute and adjudicate
-    let mut court = Court::new(CourtConfig::default());
+    let court_config = CourtConfig::default();
+    let dispute_bond = court_config.dispute_bond;
+    let mut court = Court::new(court_config);
     let dispute_id = court
         .file_dispute(
             DisputeType::ExecutionDivergence {
@@ -99,14 +103,34 @@ fn main() {
                 ephemeral: false,
             },
             200u64,
+            dispute_bond,
         )
         .unwrap();
 
-    let verdict = court
-        .adjudicate(dispute_id, &chain, &tampered, 205u64)
-        .unwrap();
-    println!("Verdict outcome: {:?}", verdict.outcome);
-    println!("Verdict summary: {}", Verdict::summary(&verdict));
+    let disputed_block = ConsensusBlock::default();
+    let pre_state = ConsensusChainState::default();
+    let challenge_payload = ChallengePayload::ReceiptMismatch {
+        action_id: 1,
+        expected: [0u8; 32],
+        observed: [0u8; 32],
+    };
+
+    match court.adjudicate(
+        dispute_id,
+        &disputed_block,
+        &pre_state,
+        &ChallengeType::InvalidExecution,
+        &challenge_payload,
+        205u64,
+    ) {
+        Ok(verdict) => {
+            println!("Verdict outcome: {:?}", verdict.outcome);
+            println!("Verdict summary: {}", Verdict::summary(&verdict));
+        }
+        Err(err) => {
+            println!("Adjudication unavailable in demo: {err}");
+        }
+    }
 
     // 5) Settlement record demonstration
     let settlement_engine = SettlementEngine::new();

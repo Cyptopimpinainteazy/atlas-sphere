@@ -110,9 +110,10 @@ impl AtomicRegistry {
     }
 
     pub async fn update_phase(&self, swap_id: &str, phase: SwapPhase) -> Result<()> {
-        let mut record = self.get_swap(swap_id).await?.ok_or_else(|| {
-            ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found"))
-        })?;
+        let mut record = self
+            .get_swap(swap_id)
+            .await?
+            .ok_or_else(|| ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found")))?;
 
         record.phase = phase;
         self.register_swap(&record).await?;
@@ -120,9 +121,10 @@ impl AtomicRegistry {
     }
 
     pub async fn mark_evm_validated(&self, swap_id: &str, valid: bool) -> Result<()> {
-        let mut record = self.get_swap(swap_id).await?.ok_or_else(|| {
-            ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found"))
-        })?;
+        let mut record = self
+            .get_swap(swap_id)
+            .await?
+            .ok_or_else(|| ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found")))?;
 
         record.evm_validation_ok = valid;
         self.register_swap(&record).await?;
@@ -130,9 +132,10 @@ impl AtomicRegistry {
     }
 
     pub async fn mark_svm_validated(&self, swap_id: &str, valid: bool) -> Result<()> {
-        let mut record = self.get_swap(swap_id).await?.ok_or_else(|| {
-            ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found"))
-        })?;
+        let mut record = self
+            .get_swap(swap_id)
+            .await?
+            .ok_or_else(|| ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found")))?;
 
         record.svm_validation_ok = valid;
         self.register_swap(&record).await?;

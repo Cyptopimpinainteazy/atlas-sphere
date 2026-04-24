@@ -120,7 +120,7 @@ impl Default for EvmConfig {
             gas_price: U256::from(1_000_000_000), // 1 gwei
             block_number: 0,
             block_timestamp: 0,
-            chain_id: 650_000,               // X3 Chain ID (matches runtime ChainId parameter)
+            chain_id: 650_000, // X3 Chain ID (matches runtime ChainId parameter)
             base_fee: U256::from(1_000_000_000), // 1 gwei base
             coinbase: H160::zero(),
         }
@@ -325,12 +325,15 @@ impl EvmExecutor for MockEvmExecutor {
     }
 }
 
-/// Compute state root from state changes (mock)
+/// Compute state root from state changes for the mock executor.
+#[cfg(any(test, feature = "test-utils"))]
 fn compute_mock_state_root(changes: &[EvmStateChange]) -> [u8; 32] {
     use sp_io::hashing::blake2_256;
+
     if changes.is_empty() {
         return [0u8; 32];
     }
+
     let mut data = Vec::new();
     for change in changes {
         data.extend_from_slice(change.address.as_bytes());
@@ -341,6 +344,7 @@ fn compute_mock_state_root(changes: &[EvmStateChange]) -> [u8; 32] {
             data.extend_from_slice(val.as_bytes());
         }
     }
+
     blake2_256(&data)
 }
 

@@ -1,9 +1,6 @@
 use crate::{mock::*, pallet::*};
 use frame_support::{assert_noop, assert_ok, traits::Hooks};
-use pallet_x3_inventory::{
-    pallet::{Event as InventoryEvent, Vaults},
-    types::*,
-};
+use pallet_x3_inventory::{pallet::Vaults, types::*};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -211,7 +208,7 @@ fn request_reservation_rejects_duplicate_route() {
         assert_noop!(
             X3Reservation::request_reservation(
                 RuntimeOrigin::root(),
-                res_id(6), // different res_id
+                res_id(6),   // different res_id
                 route_id(5), // same route_id
                 vid,
                 lid,

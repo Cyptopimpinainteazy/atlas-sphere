@@ -302,9 +302,7 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
                 .rpc
                 .eth_send_raw_tx(&signed_tx_hex)
                 .await
-                .map_err(|e| {
-                    CoordinatorError::Internal(format!("eth_sendRawTransaction: {e}"))
-                })?;
+                .map_err(|e| CoordinatorError::Internal(format!("eth_sendRawTransaction: {e}")))?;
             tracing::info!(tx_hash = %tx_hash, "EVM HTLC published on-chain");
         }
 
@@ -486,11 +484,8 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         {
             let sig_bytes = self.signer.sign(&instruction_data).await;
             let signed_tx_hex = hex::encode(&sig_bytes);
-            let tx_sig = self
-                .rpc
-                .solana_send_tx(&signed_tx_hex)
-                .await
-                .map_err(|e| {
+            let tx_sig =
+                self.rpc.solana_send_tx(&signed_tx_hex).await.map_err(|e| {
                     CoordinatorError::Internal(format!("solana sendTransaction: {e}"))
                 })?;
             tracing::info!(signature = %tx_sig, "SVM HTLC published on-chain");
@@ -557,13 +552,9 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         {
             let sig_bytes = self.signer.sign(&instruction_data).await;
             let signed_tx_hex = hex::encode(&sig_bytes);
-            let tx_sig = self
-                .rpc
-                .solana_send_tx(&signed_tx_hex)
-                .await
-                .map_err(|e| {
-                    CoordinatorError::Internal(format!("SVM claim_htlc sendTransaction: {e}"))
-                })?;
+            let tx_sig = self.rpc.solana_send_tx(&signed_tx_hex).await.map_err(|e| {
+                CoordinatorError::Internal(format!("SVM claim_htlc sendTransaction: {e}"))
+            })?;
             tracing::info!(signature = %tx_sig, "SVM HTLC claim published");
             return Ok(tx_sig.into_bytes());
         }
@@ -587,13 +578,9 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         {
             let sig_bytes = self.signer.sign(&instruction_data).await;
             let signed_tx_hex = hex::encode(&sig_bytes);
-            let tx_sig = self
-                .rpc
-                .solana_send_tx(&signed_tx_hex)
-                .await
-                .map_err(|e| {
-                    CoordinatorError::Internal(format!("SVM refund_htlc sendTransaction: {e}"))
-                })?;
+            let tx_sig = self.rpc.solana_send_tx(&signed_tx_hex).await.map_err(|e| {
+                CoordinatorError::Internal(format!("SVM refund_htlc sendTransaction: {e}"))
+            })?;
             tracing::info!(signature = %tx_sig, "SVM HTLC refund published");
             return Ok(tx_sig.into_bytes());
         }
@@ -705,14 +692,9 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             let sig_bytes = self.signer.sign(&calldata).await;
             let extrinsic_hex = format!("0x{}", hex::encode(&sig_bytes));
             self.rpc
-                .call(
-                    "author_submitExtrinsic",
-                    serde_json::json!([extrinsic_hex]),
-                )
+                .call("author_submitExtrinsic", serde_json::json!([extrinsic_hex]))
                 .await
-                .map_err(|e| {
-                    CoordinatorError::Internal(format!("author_submitExtrinsic: {e}"))
-                })?;
+                .map_err(|e| CoordinatorError::Internal(format!("author_submitExtrinsic: {e}")))?;
             tracing::info!("X3VM HTLC extrinsic submitted on-chain");
         }
 
@@ -740,10 +722,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
 
         match self
             .rpc
-            .call(
-                "state_getStorage",
-                serde_json::json!([storage_key_hex]),
-            )
+            .call("state_getStorage", serde_json::json!([storage_key_hex]))
             .await
         {
             Ok(result) => {
@@ -796,10 +775,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             let sig_bytes = self.signer.sign(&calldata).await;
             let extrinsic_hex = format!("0x{}", hex::encode(&sig_bytes));
             self.rpc
-                .call(
-                    "author_submitExtrinsic",
-                    serde_json::json!([extrinsic_hex]),
-                )
+                .call("author_submitExtrinsic", serde_json::json!([extrinsic_hex]))
                 .await
                 .map_err(|e| {
                     CoordinatorError::Internal(format!("X3VM claim_htlc submitExtrinsic: {e}"))
@@ -836,10 +812,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             let sig_bytes = self.signer.sign(&calldata).await;
             let extrinsic_hex = format!("0x{}", hex::encode(&sig_bytes));
             self.rpc
-                .call(
-                    "author_submitExtrinsic",
-                    serde_json::json!([extrinsic_hex]),
-                )
+                .call("author_submitExtrinsic", serde_json::json!([extrinsic_hex]))
                 .await
                 .map_err(|e| {
                     CoordinatorError::Internal(format!("X3VM refund_htlc submitExtrinsic: {e}"))

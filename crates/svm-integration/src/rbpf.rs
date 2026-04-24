@@ -270,8 +270,14 @@ fn create_loader() -> Arc<BuiltinProgram<AtlasSyscallContext>> {
         (b"sol_memcmp_", syscall_sol_memcmp),
         (b"sol_memset_", syscall_sol_memset),
         (b"sol_panic_", syscall_sol_panic),
-        (b"sol_create_program_address", syscall_sol_create_program_address),
-        (b"sol_try_find_program_address", syscall_sol_try_find_program_address),
+        (
+            b"sol_create_program_address",
+            syscall_sol_create_program_address,
+        ),
+        (
+            b"sol_try_find_program_address",
+            syscall_sol_try_find_program_address,
+        ),
     ];
 
     for (name, func) in syscalls {

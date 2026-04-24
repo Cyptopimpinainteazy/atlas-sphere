@@ -108,7 +108,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_core::{ed25519, ConstU32, H256};
     use sp_io::hashing::blake2_256;
-    use sp_runtime::{Saturating, SaturatedConversion};
+    use sp_runtime::{SaturatedConversion, Saturating};
     use sp_std::vec::Vec;
 
     /// Current storage version
@@ -314,13 +314,8 @@ pub mod pallet {
     /// O(1)-lookup timeout refunds without a full storage scan. Capped at 20 intents per block to
     /// bound on_initialize execution time; excess intents can be refunded via `refund_settlement`.
     #[pallet::storage]
-    pub type IntentDeadlineIndex<T: Config> = StorageMap<
-        _,
-        Twox64Concat,
-        BlockNumberFor<T>,
-        BoundedVec<H256, ConstU32<20>>,
-        ValueQuery,
-    >;
+    pub type IntentDeadlineIndex<T: Config> =
+        StorageMap<_, Twox64Concat, BlockNumberFor<T>, BoundedVec<H256, ConstU32<20>>, ValueQuery>;
 
     /// Atomic lock expiry index: deadline_block → intent_ids whose AtomicLock expires at that block.
     ///
@@ -539,8 +534,7 @@ pub mod pallet {
 
             // take() removes the entry and returns the BoundedVec: 1 read + 1 write.
             let expired = IntentDeadlineIndex::<T>::take(n);
-            let mut weight =
-                <T as frame_system::Config>::DbWeight::get().reads_writes(1, 1);
+            let mut weight = <T as frame_system::Config>::DbWeight::get().reads_writes(1, 1);
 
             for intent_id in expired.iter().take(MAX_REFUNDS_PER_BLOCK) {
                 // 2 reads per loop iteration: IntentStates + SettlementIntents.
@@ -614,7 +608,8 @@ pub mod pallet {
 
                     // Actually confiscate the reserved funds — without this the slash
                     // is a no-op: the event fires but no balance is ever reduced.
-                        let _ = <T as Config>::Currency::slash_reserved(&escrow_account, slashed_amount);
+                    let _ =
+                        <T as Config>::Currency::slash_reserved(&escrow_account, slashed_amount);
 
                     // Emit event that off-chain worker or governance can use to slash bond
                     Self::deposit_event(Event::AtomicLockTimeoutSlashed {
@@ -702,8 +697,7 @@ pub mod pallet {
                 let secs_to_deadline =
                     timeout_seconds.unwrap_or(T::DefaultSettlementTimeout::get());
                 // Add 1 block of padding so the refund fires strictly AFTER the Unix timeout.
-                let blocks_until_deadline: u32 =
-                    ((secs_to_deadline / 6).saturating_add(1)) as u32;
+                let blocks_until_deadline: u32 = ((secs_to_deadline / 6).saturating_add(1)) as u32;
                 let deadline_block = frame_system::Pallet::<T>::block_number()
                     .saturating_add(blocks_until_deadline.saturated_into());
                 IntentDeadlineIndex::<T>::mutate(deadline_block, |list| {
@@ -802,8 +796,8 @@ pub mod pallet {
                 let atomic_lock = atomic_lock::AtomicLock::new_prepare(
                     intent_id.into(),
                     who.clone(),
-                    lock_amount,     // actual amount from this escrow leg
-                    who.clone(),     // depositor is the escrow account
+                    lock_amount, // actual amount from this escrow leg
+                    who.clone(), // depositor is the escrow account
                     Default::default(),
                     current_block,
                     commit_deadline_blocks,
@@ -836,9 +830,9 @@ pub mod pallet {
                     // Extract old prepare deadline before transitioning, so we can move
                     // the intent_id to its new slot in AtomicLockExpiryIndex.
                     let old_expiry = match &atomic_lock.phase {
-                        crate::atomic_lock::LockPhase::LockedForCommit { commit_deadline, .. } => {
-                            Some(*commit_deadline)
-                        }
+                        crate::atomic_lock::LockPhase::LockedForCommit {
+                            commit_deadline, ..
+                        } => Some(*commit_deadline),
                         _ => None,
                     };
 
@@ -1105,7 +1099,7 @@ pub mod pallet {
             origin: OriginFor<T>,
             intent_id: H256,
             btc_txid: H256,
-            tx_index: u32,      // C-009: position of tx in block, required for direction-aware Merkle verification
+            tx_index: u32, // C-009: position of tx in block, required for direction-aware Merkle verification
             vout: u32,
             amount_sats: u64,
             merkle_proof: Vec<H256>,
@@ -1124,7 +1118,8 @@ pub mod pallet {
             );
 
             // Verify merkle proof
-            let is_valid = Self::verify_btc_merkle_proof(&btc_txid, tx_index, &merkle_proof, &block_header)?;
+            let is_valid =
+                Self::verify_btc_merkle_proof(&btc_txid, tx_index, &merkle_proof, &block_header)?;
             ensure!(is_valid, Error::<T>::InvalidBtcProof);
 
             // Store/update block header
@@ -1217,10 +1212,7 @@ pub mod pallet {
 
             // A configuration with zero required confirmations would cause division-by-zero
             // in finality_score and would mark every unconfirmed tx as already final.
-            ensure!(
-                config.confirmations_required > 0,
-                Error::<T>::InvalidProof
-            );
+            ensure!(config.confirmations_required > 0, Error::<T>::InvalidProof);
 
             ChainFinality::<T>::insert(chain, config);
 

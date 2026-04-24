@@ -1,0 +1,41 @@
+{
+  "_comment": "Baseline of accepted LaunchOps test_results statuses (from .launchops/test_results.json). CI gate (scripts/ci/verify_launchops_test_results_baseline.sh) pins each test's (status, exit_code) so a silent flip -- cargo_clippy going from exit 101 'missing tool' to exit 1 'real clippy error', or cargo_fmt going from failed to passed without a commit -- fails CI. To accept a change, run the gate with UPDATE_BASELINE=1 and commit this file alongside the explanation of the change in the PR.",
+  "tests": [
+    {
+      "name": "cargo_audit",
+      "status": "failed",
+      "exit_code": 101,
+      "accepted_reason": "Accepted 2026-04-23: cargo-audit binary not installed in scan env (exit 101 'no such command'). Launch gate requires cargo-audit be installed in CI and baseline flip from failed->passed; this failure must not mask a real advisory hit."
+    },
+    {
+      "name": "cargo_check",
+      "status": "failed",
+      "exit_code": 101,
+      "accepted_reason": "Accepted 2026-04-23: workspace does not compile cleanly today (Wave 0 workspace-compile fix outstanding, exit 101). Flip to passed is required before RC-0 canonicalization is declared complete."
+    },
+    {
+      "name": "cargo_clippy",
+      "status": "failed",
+      "exit_code": 101,
+      "accepted_reason": "Accepted 2026-04-23: blocked behind cargo_check (exit 101). When cargo_check flips to passed, clippy status must be reassessed and baseline refreshed; a silent flip to exit 1 'real clippy error' is a regression."
+    },
+    {
+      "name": "cargo_deny",
+      "status": "failed",
+      "exit_code": 5,
+      "accepted_reason": "Accepted 2026-04-23: cargo-deny config has unresolved advisories/bans (exit 5). Launch gate requires cargo-deny clean or documented allowances before public testnet."
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "failed",
+      "exit_code": 1,
+      "accepted_reason": "Accepted 2026-04-23: workspace-wide fmt drift (exit 1). Flip to passed is required before RC-1 and will be covered by the same Wave 0 pass that clears cargo_check."
+    },
+    {
+      "name": "cargo_test",
+      "status": "failed",
+      "exit_code": 101,
+      "accepted_reason": "Accepted 2026-04-23: blocked behind cargo_check (exit 101). When cargo_check flips to passed, cargo_test is expected to run and its baseline must be refreshed with the real pass/fail outcome."
+    }
+  ]
+}

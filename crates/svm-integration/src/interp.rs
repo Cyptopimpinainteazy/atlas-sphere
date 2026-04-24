@@ -714,7 +714,7 @@ impl<'a> Vm<'a> {
                 for i in 0..seeds_len {
                     // Each seed entry is { ptr: u64, len: u64 } = 16 bytes
                     let entry_addr = seeds_ptr + i * 16;
-                    let ptr = self.mem_read(entry_addr, 8)? as u64;
+                    let ptr = self.mem_read(entry_addr, 8)?;
                     let len = self.mem_read(entry_addr + 8, 8)? as usize;
                     if len > 32 {
                         return Ok(1); // Solana: seed too long
@@ -754,7 +754,7 @@ impl<'a> Vm<'a> {
                 let mut seed_data_list: Vec<Vec<u8>> = Vec::new();
                 for i in 0..seeds_len {
                     let entry_addr = seeds_ptr + i * 16;
-                    let ptr = self.mem_read(entry_addr, 8)? as u64;
+                    let ptr = self.mem_read(entry_addr, 8)?;
                     let len = self.mem_read(entry_addr + 8, 8)? as usize;
                     if len > 32 {
                         return Ok(1);
@@ -950,13 +950,13 @@ pub fn execute_bpf(
     // Determine instruction stream
     let text: &[u8] = if payload.starts_with(b"\x7fELF") {
         elf_find_text(payload).ok_or(SvmError::InvalidPayload)?
-    } else if payload.len() % 8 == 0 {
+    } else if payload.len().is_multiple_of(8) {
         payload
     } else {
         return Err(SvmError::InvalidPayload);
     };
 
-    if text.is_empty() || text.len() % 8 != 0 {
+    if text.is_empty() || !text.len().is_multiple_of(8) {
         return Err(SvmError::InvalidPayload);
     }
 
@@ -968,7 +968,7 @@ pub fn execute_bpf(
             let compute_units = config.compute_unit_limit - vm.fuel;
             let mut result = SvmExecutionResult {
                 success: r0 == 0, // Solana convention: 0 = success
-                output: (r0 as u64).to_le_bytes().to_vec(),
+                output: r0.to_le_bytes().to_vec(),
                 compute_units_used: compute_units,
                 account_updates: Vec::new(),
                 logs: vec![],
@@ -991,7 +991,7 @@ pub fn validate_program(payload: &[u8]) -> SvmResult<()> {
         elf_find_text(payload).ok_or(SvmError::InvalidPayload)?;
         return Ok(());
     }
-    if payload.len() % 8 != 0 {
+    if !payload.len().is_multiple_of(8) {
         return Err(SvmError::InvalidPayload);
     }
     // Walk instructions and check opcode classes are valid

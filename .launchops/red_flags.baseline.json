@@ -1,0 +1,4505 @@
+{
+  "_comment": "Pinned fingerprints for .launchops/red_flags.json. Regenerate with UPDATE_BASELINE=1. Fill accepted_reason for each entry during review. Any new/removed/drifted entry fails CI until this baseline is updated.",
+  "red_flags": [
+    {
+      "key": "crates/apotheosis-tx/src/builder.rs::416::unwrap()::high",
+      "file": "crates/apotheosis-tx/src/builder.rs",
+      "line": 416,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "55c8fd7741582389",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/apotheosis-tx/src/routes.rs::415::unwrap()::high",
+      "file": "crates/apotheosis-tx/src/routes.rs",
+      "line": 415,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "e221131e4d858929",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/apotheosis-tx/src/routes.rs::434::unwrap()::high",
+      "file": "crates/apotheosis-tx/src/routes.rs",
+      "line": 434,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "f128aab6b5331a47",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::621::unwrap()::critical",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 621,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5e3fae04c63fc544",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::624::stub::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 624,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "c6cba6db57a9b12c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::652::unwrap()::critical",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 652,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a18b18c030bef1f2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::712::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 712,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "b3254ef531765c6e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::771::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 771,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "92a47397806f1c52",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::791::unwrap()::critical",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 791,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f74ea6071b44d45b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::800::unwrap()::critical",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 800,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "75c8329b92181d2d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::802::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 802,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "ec69b9dc091626d7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::803::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 803,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "78149cfa0442083b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::815::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 815,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "d205dad3278cd1f0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::816::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 816,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "7c1fb697599e19e9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::901::unwrap()::critical",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 901,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "06ddf4586a4502fb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::942::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 942,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "bd24018a49b16b05",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::943::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 943,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "3e38d2769c586ac3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::948::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 948,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "0766c8379274ae91",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/atomic-swap-orchestrator/src/lib.rs::949::expect()::high",
+      "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+      "line": 949,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "6ae8972c989fe484",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/chronos-flash/src/intent.rs::221::stub::medium",
+      "file": "crates/chronos-flash/src/intent.rs",
+      "line": 221,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "d66efcfff7018ec6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/chronos-flash/src/oracle.rs::156::unwrap()::high",
+      "file": "crates/chronos-flash/src/oracle.rs",
+      "line": 156,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "958d538c1017e409",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/chronos-flash/src/router.rs::210::unwrap()::high",
+      "file": "crates/chronos-flash/src/router.rs",
+      "line": 210,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "92583d2dc470c2b0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::176::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 176,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "cf77de34ccc21462",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::179::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 179,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "2ebe35af77f222ba",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::181::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 181,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "333177d25d822f2a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::184::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 184,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "1d80a415f3f6896e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::191::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 191,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "fa02109c2a110352",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::194::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 194,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "724483fea223e8f8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/attestation.rs::197::unwrap()::high",
+      "file": "crates/confidential-gpu/src/attestation.rs",
+      "line": 197,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "175ae3498879593d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/enclave.rs::167::unwrap()::high",
+      "file": "crates/confidential-gpu/src/enclave.rs",
+      "line": 167,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "75f4b427e0a9b71f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/enclave.rs::181::unwrap()::high",
+      "file": "crates/confidential-gpu/src/enclave.rs",
+      "line": 181,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6bdc7cf3962cad37",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/enclave.rs::183::unwrap()::high",
+      "file": "crates/confidential-gpu/src/enclave.rs",
+      "line": 183,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "696812ad52f209b3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/lib.rs::304::unwrap()::high",
+      "file": "crates/confidential-gpu/src/lib.rs",
+      "line": 304,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c22f5a23aaae6137",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/threshold.rs::115::stub::medium",
+      "file": "crates/confidential-gpu/src/threshold.rs",
+      "line": 115,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "15d5697d9b5b887e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/confidential-gpu/src/threshold.rs::220::unwrap()::high",
+      "file": "crates/confidential-gpu/src/threshold.rs",
+      "line": 220,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "76e19e1c09b7a6eb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/lib.rs::613::unwrap()::high",
+      "file": "crates/contention-predictor/src/lib.rs",
+      "line": 613,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "492a2dc57d45cb2c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/lib.rs::641::unwrap()::high",
+      "file": "crates/contention-predictor/src/lib.rs",
+      "line": 641,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "9993a52a9850ace2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/lib.rs::688::unwrap()::high",
+      "file": "crates/contention-predictor/src/lib.rs",
+      "line": 688,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c07f823362f04cfe",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/lib.rs::706::unwrap()::high",
+      "file": "crates/contention-predictor/src/lib.rs",
+      "line": 706,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "2e0e6f6c9a3915e0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/model.rs::147::unwrap()::high",
+      "file": "crates/contention-predictor/src/model.rs",
+      "line": 147,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6bc8e0e43ee623d7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/model.rs::163::unwrap()::high",
+      "file": "crates/contention-predictor/src/model.rs",
+      "line": 163,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ac8b3b20dba829b7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/shard_planner.rs::181::unwrap()::high",
+      "file": "crates/contention-predictor/src/shard_planner.rs",
+      "line": 181,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7da17228718ac150",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/shard_planner.rs::206::unwrap()::high",
+      "file": "crates/contention-predictor/src/shard_planner.rs",
+      "line": 206,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "e859189e45e553af",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/shard_planner.rs::231::unwrap()::high",
+      "file": "crates/contention-predictor/src/shard_planner.rs",
+      "line": 231,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "800518d165841faa",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/contention-predictor/src/shard_planner.rs::261::unwrap()::high",
+      "file": "crates/contention-predictor/src/shard_planner.rs",
+      "line": 261,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "a15b705cfc7eef4e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/evm_validator.rs::125::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+      "line": 125,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "de3ba4f41b312b47",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/evm_validator.rs::138::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+      "line": 138,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7dc48c3b5e5cd38a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/evm_validator.rs::147::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+      "line": 147,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "73179fc4f5534567",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/evm_validator.rs::157::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+      "line": 157,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5dc33760b7a6dcce",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/failover.rs::126::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/failover.rs",
+      "line": 126,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "53e5619ad751a661",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/failover.rs::135::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/failover.rs",
+      "line": 135,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5f316f68459ef5a0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/kernels.rs::170::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/kernels.rs",
+      "line": 170,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c8e6109cb6524740",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/kernels.rs::178::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/kernels.rs",
+      "line": 178,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8b58a53868c8e228",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/kernels.rs::203::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/kernels.rs",
+      "line": 203,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "788013e40a178e4f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/lib.rs::101::stub::high",
+      "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+      "line": 101,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "357a5f34dc9ec218",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/lib.rs::111::stub::high",
+      "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+      "line": 111,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "6ecbdba10f05b09c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/lib.rs::62::stub::high",
+      "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+      "line": 62,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "4ba5af7679bd75c3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/lib.rs::88::stub::high",
+      "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+      "line": 88,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "9b933d27a29af3c4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/orchestrator.rs::204::#[ignore]::high",
+      "file": "crates/cross-chain-gpu-validator/src/orchestrator.rs",
+      "line": 204,
+      "pattern": "#[ignore]",
+      "severity": "high",
+      "fingerprint": "cfc9d68d907451a1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/svm_validator.rs::110::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+      "line": 110,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "d051eda945918a0a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/svm_validator.rs::123::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+      "line": 123,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cc0a7ddeafc36a8f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/svm_validator.rs::137::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+      "line": 137,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a8913a3e299c6bdd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-gpu-validator/src/svm_validator.rs::146::unwrap()::critical",
+      "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+      "line": 146,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b5e2b47b2059247d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::751::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 751,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "2e4c4d3aa8e315f9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::758::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 758,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "fa1a150f57108468",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::765::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 765,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "b89590cbac1afec8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::773::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 773,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8f5ac3d0f9b6f3da",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::775::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 775,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ddf4b27a5bf8af2e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::808::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 808,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4cc7a52c7f92721c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::811::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 811,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ed9f84f62dbf2743",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::815::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 815,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "482077d40a5dcb4f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::816::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 816,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "f05e6862ee4cb766",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::820::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 820,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c1640d8a9c0ac64b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::848::panic!::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 848,
+      "pattern": "panic!",
+      "severity": "high",
+      "fingerprint": "b99ff76f2a552ec4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::871::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 871,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "cf5b680194e851ae",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::873::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 873,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "162dd20c7d08b0da",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::874::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 874,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8f0a14330cd48929",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::878::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 878,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "576e3f5c6a131137",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::879::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 879,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "b427abb51bc9ad4a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::880::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 880,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "1747000aece038dc",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::884::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 884,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "9c25e070ab867842",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::885::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 885,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "e016e66659740e0c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/accounting.rs::889::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/accounting.rs",
+      "line": 889,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ac415ac3bef12c50",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/adapters.rs::385::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/adapters.rs",
+      "line": 385,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7023e0628a1a3077",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/arbitrage.rs::499::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/arbitrage.rs",
+      "line": 499,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c3b3331fdd09e261",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/arbitrage.rs::507::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/arbitrage.rs",
+      "line": 507,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6519d12ae4a58d63",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/lib.rs::457::expect()::medium",
+      "file": "crates/cross-chain-position-manager/src/lib.rs",
+      "line": 457,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "7ebf40826f4802e0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::105::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 105,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "65f15bde63cb2e6e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::397::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 397,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "a49c774b73db3464",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::441::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 441,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "a193b882d3ce2a42",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::523::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 523,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "c302ca8de4f5bd12",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::72::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 72,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "cb7bdf09034d7375",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::73::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 73,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "7432b3532445a305",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/migration.rs::821::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/migration.rs",
+      "line": 821,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "573e44f2f35356c3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::397::panic!::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 397,
+      "pattern": "panic!",
+      "severity": "high",
+      "fingerprint": "4377f58ae33e23a1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::402::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 402,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "16123a5ff2e47ffc",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::487::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 487,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "308987eb5f3199d3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::493::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 493,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "9a8472252a637ad4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::515::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 515,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "a7a1e5c2100c2670",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::528::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 528,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "153d07dfe73b20b0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/partner.rs::534::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/partner.rs",
+      "line": 534,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d29fbb37dcf9ded0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalance.rs::224::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+      "line": 224,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "534106935aad85fa",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalance.rs::240::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+      "line": 240,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "e943dfeb2263dbee",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalance.rs::258::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+      "line": 258,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "264318715f4b3b2f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalance.rs::285::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+      "line": 285,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "3b169329751a0084",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalance.rs::418::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+      "line": 418,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d31974cd0ec7dc57",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalancing.rs::208::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+      "line": 208,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "b605e78bd852d3b8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalancing.rs::360::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+      "line": 360,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "72404396a85e49ae",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalancing.rs::394::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+      "line": 394,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "e30d649cf0d0c5bb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalancing.rs::596::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+      "line": 596,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "5ab16fbdfa891be1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalancing.rs::605::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+      "line": 605,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c8cd280ae1645123",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/rebalancing.rs::607::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+      "line": 607,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "79160660382649d3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/risk.rs::445::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/risk.rs",
+      "line": 445,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8fc40bb53205dc57",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/risk.rs::454::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/risk.rs",
+      "line": 454,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c3c9a9c28c1de34a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1026::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1026,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "5f2129f5f8f9e651",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1036::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1036,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "cb651f87bb99de6d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1046::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1046,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "b4aba9157b7ada78",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1056::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1056,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c795a7758c4bccdc",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1059::expect()::medium",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1059,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "16bc186af72c8151",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1068::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1068,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "002dcb65d13c193d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1078::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1078,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "79f919b7f316da78",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1080::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1080,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c6030077306cc43d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1081::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1081,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "a19aed7748b99cfb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1083::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1083,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ae863cc780501730",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1087::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1087,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "740c96793822dcda",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::1089::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 1089,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d3e0d16b0bf30b66",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::641::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 641,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "2923a056116e43ae",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::835::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 835,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "76fe33b9c6c220fb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::841::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 841,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "6ae8a3e5532d5532",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/router.rs::995::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/router.rs",
+      "line": 995,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "cc4f06c3ceb77759",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::239::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 239,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "286aeea90ef677c0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::456::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 456,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "545d5c952b89eca2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::481::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 481,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "3065ff68dea969bb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::503::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 503,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "a9e27129d19f6669",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::511::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 511,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "faa58a01b634292c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::513::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 513,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "689c5fe2b1fe85ef",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::520::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 520,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "74a3edb17957a095",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/state.rs::538::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/state.rs",
+      "line": 538,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8b7dbfe49d5f05ff",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/tracking.rs::318::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/tracking.rs",
+      "line": 318,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "6afd236892b33418",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/tracking.rs::479::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/tracking.rs",
+      "line": 479,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "3c6394ff497e9ed3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/types.rs::35::expect()::medium",
+      "file": "crates/cross-chain-position-manager/src/types.rs",
+      "line": 35,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "fc134837b2b308f8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/utils.rs::659::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/utils.rs",
+      "line": 659,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "e620d6df5b74f315",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/utils.rs::667::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/utils.rs",
+      "line": 667,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6757d92de8420b26",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/vault_controller.rs::327::stub::medium",
+      "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "line": 327,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "f3c19dcb0d02d2ad",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/vault_controller.rs::365::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "line": 365,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "fb21b4357d9e142b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/vault_controller.rs::377::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "line": 377,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "62baa8165b120a80",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/vault_controller.rs::388::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "line": 388,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "9ced28eb6c521659",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-chain-position-manager/src/vault_controller.rs::400::unwrap()::high",
+      "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "line": 400,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7a435203dc768f7c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/canonical.rs::304::expect()::high",
+      "file": "crates/cross-vm-bridge/src/canonical.rs",
+      "line": 304,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "a0b1045aa8d2b842",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/canonical.rs::323::expect()::high",
+      "file": "crates/cross-vm-bridge/src/canonical.rs",
+      "line": 323,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "c9b4db33fcb4be74",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/canonical.rs::412::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/canonical.rs",
+      "line": 412,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5fa4858502f37ddd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/canonical.rs::472::expect()::high",
+      "file": "crates/cross-vm-bridge/src/canonical.rs",
+      "line": 472,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "785b64da69de6645",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/canonical.rs::487::expect()::high",
+      "file": "crates/cross-vm-bridge/src/canonical.rs",
+      "line": 487,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "20495e41282d4a11",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::1080::stub::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 1080,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "301d8c2e4147b77f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::1498::stub::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 1498,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "b0cc03e9981a52a2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::225::stub::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 225,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "216aa11f4ed7b855",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2307::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2307,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "72e49e79f096cadc",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2585::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2585,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "143b0e3edd4aeb8d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2600::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2600,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "397faa006358f839",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2601::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2601,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "ba2510de6e04cbf2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2621::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2621,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "db5518dc87f02c01",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2651::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2651,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "e71c30b76559a8d7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2653::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2653,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "d36307512e7bbea5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2672::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2672,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f7c167f9206d5ace",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2674::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2674,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "0812f630262ed56f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2691::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2691,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f70b65d6d2cbfaef",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2693::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2693,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "632556cb984baf64",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2703::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2703,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "0a7751667a187e2a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2716::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2716,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3d9faea0ec533047",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2775::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2775,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3bbc4ff1b73ef890",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2783::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2783,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a7e6bc82e5f935ee",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2792::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2792,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b0494f74b8230501",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2796::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2796,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "2f90ebf2004aedac",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2814::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2814,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "4911fbf7c48200d9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2835::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2835,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f90f4ff4ad987a6f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2843::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2843,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "d2d3e2d7c4b46f38",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2862::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2862,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3fc86f23acb48fa3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2873::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2873,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "20929ae5591806dd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::2950::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 2950,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "001928ccf5a18905",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3003::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3003,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "ba46229f6211d5ae",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3006::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3006,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "e1feed158fd0c551",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3014::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3014,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c50aef7eb4b40f7f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3035::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3035,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "235390c0fe406025",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3037::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3037,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3eafcb84e890145e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3061::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3061,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "fd94bbf760eafe65",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3070::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3070,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c0fb30990e927404",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3072::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3072,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a0d2dc443affe0bb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3117::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3117,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "818e29842b9a7f3d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3120::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3120,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "2c1c98590d1722f9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3153::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3153,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "10311ceb0a29bd64",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3156::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3156,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1c7d8971c6b366dd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3175::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3175,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "fc13e46259f31758",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3177::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3177,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "03fdd1ce72bf6fd0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3196::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3196,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "9d3de9975bfa2157",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3198::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3198,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "378a97fc1cc6feb4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3216::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3216,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b0ba39289972e075",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3218::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3218,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7dcff74b0a6b75b2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3239::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3239,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a3a1d91ed615f036",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3241::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3241,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8e8cb4685a13035a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3289::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3289,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "d19ef43bd7c9b4a0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3298::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3298,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a991ccbb6012f90b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3307::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3307,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8741fda1d80fe149",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3315::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3315,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a37f25e0d8255ca0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3337::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3337,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7dbfd911cb2754c0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3351::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3351,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "60f7c3fcef52d314",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3377::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3377,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "830927e6edb499d1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3386::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3386,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a243fde74406a96e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3397::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3397,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "68cf56a9c9a293e4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3402::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3402,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "db74be4ffea8958f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3437::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3437,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "146aac80b70e3332",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3459::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3459,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6c27bd8e55c4e661",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3485::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3485,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "34b4f0875c77b6c2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3488::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3488,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "58a9bcab45170d2b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3520::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3520,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f6cbc4fe80b9dc2f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3521::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3521,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1145a8537beee506",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3590::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3590,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "19be9b937e2ea834",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3591::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3591,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "971e4275664047ef",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3609::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3609,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7c5cd638dad5ad6e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3618::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3618,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "da969d9d1ee607cf",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3627::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3627,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3ec2e6b4eed9dcc6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3634::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3634,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "633207b498dde282",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3652::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3652,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8046d7406219cfa1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3653::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3653,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "becb2ccb6e40695b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3677::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3677,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "2c7d50c4038d4882",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3686::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3686,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "631861559b5a08bf",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3688::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3688,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "924d8afc1572d3c1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3704::stub::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3704,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "35e6816817d87c28",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3716::stub::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3716,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "27c393f47e59c6f2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3915::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3915,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "cfa90eddbb52ceff",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3919::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3919,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "480ac7d3c1e2ef93",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3948::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3948,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "3b615ab66fbe1135",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3952::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3952,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "13042e7248b0e77a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3979::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3979,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "167cc74c909d14d9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3983::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3983,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "ceb983ae3e46d9db",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::3997::stub::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 3997,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "7e3c279cff1b430b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4018::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4018,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "0a740bdc49daa01a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4022::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4022,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "bb20f2a2225f98da",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4064::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4064,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "317085f142d5f2a4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4068::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4068,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "70822ab957862e80",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4102::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4102,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "a25551afd0944887",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4113::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4113,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "55079ead14919e78",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4128::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4128,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "5f17f1be1bab45a2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4156::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4156,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "bf9728d16ed1ba1c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4157::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4157,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "bfbf814d9d724bd2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4172::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4172,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5886468e9f2eb428",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4197::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4197,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "7ca91f200d1f9edc",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4208::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4208,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "a63b0d8a651e77c3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4212::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4212,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "0e68122661b5a3ca",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4227::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4227,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "3e00788ee8d50e7d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4250::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4250,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "433aa1cba280ec95",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4266::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4266,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "ca8a0bd3ef5dde32",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4278::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4278,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3fc4b9caba7d4866",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4339::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4339,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "d26e64271cc55f71",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4359::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4359,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "98cb7a0acb989a3a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4431::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4431,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "120c7dfaf1b881a0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4441::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4441,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "df149d7687aa72f8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4443::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4443,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "6576880cafbbf84c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4447::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4447,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "1ceccc3047c44a80",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4476::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4476,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "0812e28a0f651705",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4509::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4509,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "efaf12a2d6003ffb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4524::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4524,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1f52baae4b634baa",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4527::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4527,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1531e06395ea4982",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4531::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4531,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "9cfbb06e7d515b52",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4584::expect()::high",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4584,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "d7e5644d155d91c4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4610::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4610,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a7095effe0b449dd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4616::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4616,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c1b89542caa34d3f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4633::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4633,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "e790a3fed73aeb58",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4648::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4648,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5859c67d0dbc9f31",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4661::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4661,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8d5eff164c048d72",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4674::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4674,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "e7d8ed83f6227eb2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4683::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4683,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "06170855c787a563",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/lib.rs::4704::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/lib.rs",
+      "line": 4704,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "37c66e551d779c72",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::523::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 523,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "e3cb02d738deb651",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::534::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 534,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "4912b184ed6d8ccb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::559::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 559,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "c855f60b58142444",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::569::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 569,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "6f4a0bfe507b7905",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::583::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 583,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "b0e0b5344eb897e9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::607::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 607,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "43a35a7511a3e02b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_proof_validator.rs::630::panic!::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+      "line": 630,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "8ee53d96d465f26e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::174::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+      "line": 174,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5fc13815b412bd91",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::367::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+      "line": 367,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "674b164001c55cfe",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::494::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+      "line": 494,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "55384e435a4e8324",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::549::unwrap()::critical",
+      "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+      "line": 549,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7c39a9dffbf7284f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/abi.rs::273::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/abi.rs",
+      "line": 273,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8a8db2e248c3cdd4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/abi.rs::282::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/abi.rs",
+      "line": 282,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "aa6901eb3998e48a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs::127::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "line": 127,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "bb7a6e770504b851",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs::283::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "line": 283,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8edc3019d7d8c991",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs::306::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "line": 306,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8ec7b8350f6de6f7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs::43::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "line": 43,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "76699e7463e9b79a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs::67::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "line": 67,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cc3f56423c008e85",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs::92::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "line": 92,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c741c776d317e01f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::242::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 242,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "3f65398e08213644",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::245::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 245,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "3dff1a2ae908aad0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::248::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 248,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "e6c1243b25a0eb5c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::264::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 264,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "80abdc12cb7ab1fe",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::277::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 277,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "b56081db99a7c686",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::295::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 295,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "af0134bfe4a46019",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::307::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 307,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "a643458a74644c04",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::325::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 325,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "f5a99182b294b18c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::366::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 366,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "d314f1b14bced41a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::374::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 374,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "7455aa05172eff84",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::383::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 383,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "30e4b873e6110851",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::401::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 401,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "30a7ffb53e518007",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::409::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 409,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "bca4ce413cc84489",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs::417::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "line": 417,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "0135ba79cee201df",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::102::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 102,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c9b62b73d9d5232c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::149::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 149,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "73b17941f79edd8e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::183::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 183,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "1e2f665ff06b8997",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::232::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 232,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "bc9aea903d758899",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::244::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 244,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "3a8da9ca513f1d7c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::255::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 255,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "ede80b5bb8c37cab",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::264::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 264,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b440a94e60555774",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::269::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 269,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c40ff28809d24d1c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::275::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 275,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "45a61c5122caf569",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::317::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 317,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c3d20830e8eb3416",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::384::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 384,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "27947c981cf7f1f0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::389::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 389,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cd30088ebf0b010b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::394::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 394,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c102f8b180bfd229",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::399::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 399,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "26acac24d9b686df",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::418::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 418,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "2b43a747854d6acd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::487::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 487,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1e47fc4ba6f805c9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::520::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 520,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cf64dc71b8caaf42",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::72::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 72,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6b765faf9b7d6c42",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::77::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 77,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "40f79f2656f4fb4e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::82::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 82,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3ab633d842e1243b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::87::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 87,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "451a9b2e4a12d649",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::92::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 92,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c8f38e4a47f949d5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/persistence.rs::97::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/persistence.rs",
+      "line": 97,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cd581bf24d19705f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/rpc_client.rs::333::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/rpc_client.rs",
+      "line": 333,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "eda9f216f207b48d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/rpc_client.rs::65::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/rpc_client.rs",
+      "line": 65,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "8e4a5b8820c55482",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::292::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 292,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "02b3f2bcdd4aa822",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::326::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 326,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "bd2508de9b89a2c9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::460::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 460,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "176759ec3e6c5aa0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::52::panic!::critical",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 52,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "63fbbb9247c9e38a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::626::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 626,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "873e15e72543451e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::650::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 650,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6c0ea20af8e6c02a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/state_machine.rs::653::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+      "line": 653,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "25a7640da3e46786",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::112::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 112,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "68722392b51ce465",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::115::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 115,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f45c68f0cab605a0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::119::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 119,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "4a193a58a3c197ed",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::120::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 120,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8d47b315d76d4876",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::135::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 135,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f18562410a687a1e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::137::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 137,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "34c5c197b135501e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::141::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 141,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c31b710ab27a9ac8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::142::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 142,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "81c2918906ad738b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::147::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 147,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "02089aa809c10c8e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::148::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 148,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "df9e545da45e998e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::151::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 151,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "40b243f32f155496",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::152::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 152,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "11477b03c998d0ff",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::177::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 177,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "d16fe2fa8ebcd9d6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::198::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 198,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f733983d303135f6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::218::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 218,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5233c6d2f5cad53d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::221::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 221,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b8bcffa6f91ebb3d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::233::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 233,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6a5169c829a6f03e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::244::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 244,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "e134453d9d578039",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::264::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 264,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "0b7c2d92baa078e1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::284::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 284,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5034042bcb30f055",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::291::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 291,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "395fc67326e3df7a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::389::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 389,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "e3a24190889b68a1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::391::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 391,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "f03140755c47bc47",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::392::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 392,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "c06ee48635a2f27f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::395::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 395,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7dcdf185eb05c732",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::396::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 396,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "d3a491d1b058a6d7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::39::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 39,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a4c5157de5468f07",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::409::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 409,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "5678fc485a7e076e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::414::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 414,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6e7bc89d7b71d3e6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::417::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 417,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6ff45e844aef1cf6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::418::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 418,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "3a2b96fb4bd26a93",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::44::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 44,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1f65253849012166",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::456::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 456,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "2630b4bacc1293cd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::459::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 459,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7eace23ea03325d1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::465::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 465,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "ad73097d62d36339",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::466::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 466,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "ca1faacc850d47d7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::478::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 478,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cd470c2567747a87",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::481::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 481,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "9fd37c4ee19467c7",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::484::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 484,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "87781c5cd9c07445",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::485::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 485,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "0c5c8dafacf39d28",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::508::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 508,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "34267303fb412aa3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::523::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 523,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8b67e09c5e918f5f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::525::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 525,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7e3a8dc8e899a14a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::526::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 526,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cb67811493369706",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::572::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 572,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7ab9f2bcc18502d9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::574::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 574,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "817d9591f71c3900",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::593::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 593,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b7b59494a2cc7b3f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::612::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 612,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "1ff1e71ae0a3b0e8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::613::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 613,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "004325fc9cc622de",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::614::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 614,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "746b91cf5f4718b2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::628::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 628,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6447a1ff80daa8bd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::643::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 643,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "9eea600ed55e41c1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::645::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 645,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a15f23febb5b4728",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::664::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 664,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "6539a8ae8949499b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::683::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 683,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "9d8384aef5e55c34",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::684::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 684,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "19f65563b6f1b16c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::685::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 685,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "91576b33d4b4047b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::699::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 699,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "772889aa37e85111",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::704::expect()::high",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 704,
+      "pattern": "expect()",
+      "severity": "high",
+      "fingerprint": "40d0faab00301c37",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::71::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 71,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "79bcab3c9df65633",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::737::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 737,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "2d0f4f83093a4a0a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::752::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 752,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "085797c250798ba3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::756::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 756,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "b1893bb6360d76e6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::776::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 776,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "eeecaa72f614a3d1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::819::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 819,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "7a9656386e900d10",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/cross-vm-coordinator/src/tests.rs::92::unwrap()::critical",
+      "file": "crates/cross-vm-coordinator/src/tests.rs",
+      "line": 92,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "a11cc94d6e90da7c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/audit.rs::195::unwrap()::high",
+      "file": "crates/custody-service/src/audit.rs",
+      "line": 195,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "9126e165078c66bd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/client.rs::169::unwrap()::high",
+      "file": "crates/custody-service/src/client.rs",
+      "line": 169,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "13db013fa93444b3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/client.rs::171::unwrap()::high",
+      "file": "crates/custody-service/src/client.rs",
+      "line": 171,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "9d19c43c9b2580aa",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/client.rs::180::unwrap()::high",
+      "file": "crates/custody-service/src/client.rs",
+      "line": 180,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4b50660a918a34f9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/client.rs::197::unwrap()::high",
+      "file": "crates/custody-service/src/client.rs",
+      "line": 197,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "989f850dbb4bfe2a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/client.rs::200::unwrap()::high",
+      "file": "crates/custody-service/src/client.rs",
+      "line": 200,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "0fcaed9a96cab9bc",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/hsm.rs::156::unwrap()::high",
+      "file": "crates/custody-service/src/hsm.rs",
+      "line": 156,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4097ab6ab51229f5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/hsm.rs::165::unwrap()::high",
+      "file": "crates/custody-service/src/hsm.rs",
+      "line": 165,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "59692b7f29ddcd04",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/hsm.rs::168::unwrap()::high",
+      "file": "crates/custody-service/src/hsm.rs",
+      "line": 168,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "32a5a8cbba3fe974",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/hsm.rs::169::unwrap()::high",
+      "file": "crates/custody-service/src/hsm.rs",
+      "line": 169,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "b4a9ee10b6a94a35",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/hsm.rs::176::unwrap()::high",
+      "file": "crates/custody-service/src/hsm.rs",
+      "line": 176,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "e0bc4ea292c29fee",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/hsm.rs::177::unwrap()::high",
+      "file": "crates/custody-service/src/hsm.rs",
+      "line": 177,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "bb1053acc256b2c0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::414::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 414,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ea8de623d07c8ed9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::422::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 422,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "725dc00184b7da0c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::424::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 424,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "e31c8713efb4f13f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::431::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 431,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "578d3b942f1e4291",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::456::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 456,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d96fa4a3aba3d1d5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::462::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 462,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "568cedb9d66400b3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::470::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 470,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6f2ce06be2376561",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::487::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 487,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "0ca45fcdb921468c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::494::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 494,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4cd92cc55997622a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::502::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 502,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "5f6c77b89add126c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/custody-service/src/service.rs::519::unwrap()::high",
+      "file": "crates/custody-service/src/service.rs",
+      "line": 519,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "f72aeb3a0482d0b5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dream-mining/src/scheduler.rs::397::unwrap()::high",
+      "file": "crates/dream-mining/src/scheduler.rs",
+      "line": 397,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "544e5d0047644b41",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dream-mining/src/scheduler.rs::400::unwrap()::high",
+      "file": "crates/dream-mining/src/scheduler.rs",
+      "line": 400,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c7202caeb032b1f9",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dream-mining/src/scheduler.rs::402::unwrap()::high",
+      "file": "crates/dream-mining/src/scheduler.rs",
+      "line": 402,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "f78a1291ff0f4cee",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dream-mining/src/scheduler.rs::422::unwrap()::high",
+      "file": "crates/dream-mining/src/scheduler.rs",
+      "line": 422,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "19bc292822e56a79",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dream-mining/src/scheduler.rs::436::unwrap()::high",
+      "file": "crates/dream-mining/src/scheduler.rs",
+      "line": 436,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "510f94a9c9d01c64",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dream-mining/src/scheduler.rs::439::unwrap()::high",
+      "file": "crates/dream-mining/src/scheduler.rs",
+      "line": 439,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c4f1881126a5afdb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::158::expect()::medium",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 158,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "a4740035d3f9f200",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::158::unwrap()::high",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 158,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "028d3eeeee4279b6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::163::expect()::medium",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 163,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "ef74a981ff2d1a6f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::163::unwrap()::high",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 163,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "3f60ea41c3a0bcd8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::190::panic!::high",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 190,
+      "pattern": "panic!",
+      "severity": "high",
+      "fingerprint": "fe896d0075488b21",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::235::unwrap()::high",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 235,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "83b7cab33e3086c6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::53::expect()::medium",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 53,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "0c69779155aab5e2",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/dylint-determinism/src/lib.rs::53::unwrap()::high",
+      "file": "crates/dylint-determinism/src/lib.rs",
+      "line": 53,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8df79d8a099f489e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/lib.rs::414::unwrap()::high",
+      "file": "crates/evm-integration/src/lib.rs",
+      "line": 414,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "95f51c530e810945",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/lib.rs::432::unwrap()::high",
+      "file": "crates/evm-integration/src/lib.rs",
+      "line": 432,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6b2c9caad22c816e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/lib.rs::462::unwrap()::high",
+      "file": "crates/evm-integration/src/lib.rs",
+      "line": 462,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d649e68012dd2231",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/lib.rs::574::expect()::medium",
+      "file": "crates/evm-integration/src/lib.rs",
+      "line": 574,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "94299a554b5a0e7e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/mini_evm.rs::11::stub::medium",
+      "file": "crates/evm-integration/src/mini_evm.rs",
+      "line": 11,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "194225b3a4d18fe6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/mini_evm.rs::13::stub::medium",
+      "file": "crates/evm-integration/src/mini_evm.rs",
+      "line": 13,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "711c8cd669b677a5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/mini_evm.rs::14::stub::medium",
+      "file": "crates/evm-integration/src/mini_evm.rs",
+      "line": 14,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "58427016708f824c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/mini_evm.rs::15::stub::medium",
+      "file": "crates/evm-integration/src/mini_evm.rs",
+      "line": 15,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "beda3c41fbe198ff",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/mini_evm.rs::16::stub::medium",
+      "file": "crates/evm-integration/src/mini_evm.rs",
+      "line": 16,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "d7e4b765957963eb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/mini_evm.rs::257::expect()::medium",
+      "file": "crates/evm-integration/src/mini_evm.rs",
+      "line": 257,
+      "pattern": "expect()",
+      "severity": "medium",
+      "fingerprint": "5df192ca1afb1f6d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/state.rs::363::unwrap()::high",
+      "file": "crates/evm-integration/src/state.rs",
+      "line": 363,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "5e4f9eb18b9f9ed3",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/state.rs::399::unwrap()::high",
+      "file": "crates/evm-integration/src/state.rs",
+      "line": 399,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8325a556fc74a36a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/evm-integration/src/state.rs::401::unwrap()::high",
+      "file": "crates/evm-integration/src/state.rs",
+      "line": 401,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d06d052047625c9b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/adapter.rs::449::unwrap()::high",
+      "file": "crates/external-chains/src/adapter.rs",
+      "line": 449,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4101736935833660",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/adapter.rs::476::unwrap()::high",
+      "file": "crates/external-chains/src/adapter.rs",
+      "line": 476,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8eed7b6aa731c02d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/assets.rs::337::unwrap()::high",
+      "file": "crates/external-chains/src/assets.rs",
+      "line": 337,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "af71701c903ddf87",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/assets.rs::347::unwrap()::high",
+      "file": "crates/external-chains/src/assets.rs",
+      "line": 347,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "341088c37769e41b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/assets.rs::370::unwrap()::high",
+      "file": "crates/external-chains/src/assets.rs",
+      "line": 370,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4b30b73222a7aa80",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/assets.rs::372::unwrap()::high",
+      "file": "crates/external-chains/src/assets.rs",
+      "line": 372,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "86ac921066f49b8d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/base.rs::533::unwrap()::high",
+      "file": "crates/external-chains/src/chains/base.rs",
+      "line": 533,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "d324db87a65b4316",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/base.rs::534::unwrap()::high",
+      "file": "crates/external-chains/src/chains/base.rs",
+      "line": 534,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "a929120c61771425",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/base.rs::535::unwrap()::high",
+      "file": "crates/external-chains/src/chains/base.rs",
+      "line": 535,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "c2177d48a34b80d6",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/base.rs::540::unwrap()::high",
+      "file": "crates/external-chains/src/chains/base.rs",
+      "line": 540,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "30c82bc498f4c53a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/base.rs::554::unwrap()::high",
+      "file": "crates/external-chains/src/chains/base.rs",
+      "line": 554,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "3937efc64b1b2f18",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/registry.rs::1209::unwrap()::high",
+      "file": "crates/external-chains/src/chains/registry.rs",
+      "line": 1209,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6e56ac354bff57ae",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/registry.rs::1213::unwrap()::high",
+      "file": "crates/external-chains/src/chains/registry.rs",
+      "line": 1213,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8d7e39f465cecbf1",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/universal.rs::318::unwrap()::high",
+      "file": "crates/external-chains/src/chains/universal.rs",
+      "line": 318,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "6268a65e854a00ae",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/universal.rs::324::unwrap()::high",
+      "file": "crates/external-chains/src/chains/universal.rs",
+      "line": 324,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "ee4a8a57b893a3f0",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/universal.rs::329::unwrap()::high",
+      "file": "crates/external-chains/src/chains/universal.rs",
+      "line": 329,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "32142ecdf7516db8",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/universal.rs::349::unwrap()::high",
+      "file": "crates/external-chains/src/chains/universal.rs",
+      "line": 349,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7c074b681dcfebf4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/universal.rs::352::unwrap()::high",
+      "file": "crates/external-chains/src/chains/universal.rs",
+      "line": 352,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7e31d11665a3ed08",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/chains/universal.rs::365::unwrap()::high",
+      "file": "crates/external-chains/src/chains/universal.rs",
+      "line": 365,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "0a50aca4bdfb5f86",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/router.rs::665::unwrap()::high",
+      "file": "crates/external-chains/src/router.rs",
+      "line": 665,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "26de591b4195fd4b",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/router.rs::678::unwrap()::high",
+      "file": "crates/external-chains/src/router.rs",
+      "line": 678,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "843d9b65e499cbbe",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/router.rs::693::unwrap()::high",
+      "file": "crates/external-chains/src/router.rs",
+      "line": 693,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "103654b16ac52fdd",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/router.rs::705::unwrap()::high",
+      "file": "crates/external-chains/src/router.rs",
+      "line": 705,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "83c3d4f091425586",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/rpc.rs::359::unwrap()::high",
+      "file": "crates/external-chains/src/rpc.rs",
+      "line": 359,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "b24cb6db41474352",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/rpc.rs::390::unwrap()::high",
+      "file": "crates/external-chains/src/rpc.rs",
+      "line": 390,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "0bef05bc5910c14c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/rpc_http.rs::9::stub::medium",
+      "file": "crates/external-chains/src/rpc_http.rs",
+      "line": 9,
+      "pattern": "stub",
+      "severity": "medium",
+      "fingerprint": "c1c17b0c5d927abb",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/settlement_integration.rs::456::unwrap()::high",
+      "file": "crates/external-chains/src/settlement_integration.rs",
+      "line": 456,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "36ca2427e963055c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/settlement_integration.rs::530::unwrap()::high",
+      "file": "crates/external-chains/src/settlement_integration.rs",
+      "line": 530,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "dd8826d885c093b5",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/external-chains/src/settlement_integration.rs::580::unwrap()::high",
+      "file": "crates/external-chains/src/settlement_integration.rs",
+      "line": 580,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "4d81cc53e18c3d90",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/gossip_bridge.rs::342::unwrap()::critical",
+      "file": "crates/flash-finality/src/gossip_bridge.rs",
+      "line": 342,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "768a02dcce6d7dac",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/gossip_bridge.rs::375::unwrap()::critical",
+      "file": "crates/flash-finality/src/gossip_bridge.rs",
+      "line": 375,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "dc5f016b2d24249e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/gossip_bridge.rs::386::panic!::critical",
+      "file": "crates/flash-finality/src/gossip_bridge.rs",
+      "line": 386,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "233de01fca038c6f",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::620::stub::high",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 620,
+      "pattern": "stub",
+      "severity": "high",
+      "fingerprint": "d90ae32e019020b4",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::742::unwrap()::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 742,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "351d0897fdb83e8d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::755::unwrap()::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 755,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "0f3a8b29284a5358",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::778::panic!::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 778,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "fe6fbf7c6334436c",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::802::panic!::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 802,
+      "pattern": "panic!",
+      "severity": "critical",
+      "fingerprint": "5a6491ac7204f466",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::878::unwrap()::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 878,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "cddc387f7fbbd7db",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::894::unwrap()::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 894,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "accc04af06abad49",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::913::unwrap()::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 913,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "8a9ee182cc41d15d",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/flash-finality/src/lib.rs::962::unwrap()::critical",
+      "file": "crates/flash-finality/src/lib.rs",
+      "line": 962,
+      "pattern": "unwrap()",
+      "severity": "critical",
+      "fingerprint": "75bd15e102a86970",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/gpu-sig-verifier/src/lib.rs::152::unwrap()::high",
+      "file": "crates/gpu-sig-verifier/src/lib.rs",
+      "line": 152,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "54fcae49b7b5331e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/gpu-sig-verifier/src/lib.rs::331::unwrap()::high",
+      "file": "crates/gpu-sig-verifier/src/lib.rs",
+      "line": 331,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "5671d2a812f1391a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/gpu-sig-verifier/src/lib.rs::335::unwrap()::high",
+      "file": "crates/gpu-sig-verifier/src/lib.rs",
+      "line": 335,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "3ab7887671679f7e",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/gpu-sig-verifier/src/lib.rs::344::unwrap()::high",
+      "file": "crates/gpu-sig-verifier/src/lib.rs",
+      "line": 344,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7eb37931ecf200fe",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/gpu-sig-verifier/src/lib.rs::355::unwrap()::high",
+      "file": "crates/gpu-sig-verifier/src/lib.rs",
+      "line": 355,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "7ae316c68135382a",
+      "accepted_reason": ""
+    },
+    {
+      "key": "crates/gpu-sig-verifier/src/lib.rs::356::unwrap()::high",
+      "file": "crates/gpu-sig-verifier/src/lib.rs",
+      "line": 356,
+      "pattern": "unwrap()",
+      "severity": "high",
+      "fingerprint": "8d49d8c45398f1c3",
+      "accepted_reason": ""
+    }
+  ]
+}

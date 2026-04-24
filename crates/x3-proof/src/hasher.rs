@@ -27,12 +27,12 @@ impl DeterministicHasher {
 
     /// Feed a u64 in canonical little-endian encoding.
     pub fn update_u64(&mut self, val: u64) {
-        self.hasher.update(&val.to_le_bytes());
+        self.hasher.update(val.to_le_bytes());
     }
 
     /// Feed a u128 in canonical little-endian encoding.
     pub fn update_u128(&mut self, val: u128) {
-        self.hasher.update(&val.to_le_bytes());
+        self.hasher.update(val.to_le_bytes());
     }
 
     /// Feed a length-prefixed byte slice.
@@ -44,9 +44,9 @@ impl DeterministicHasher {
     /// Feed an optional value — 0x00 for None, 0x01 + value for Some.
     pub fn update_option_bytes(&mut self, data: &Option<Vec<u8>>) {
         match data {
-            None => self.hasher.update(&[0x00]),
+            None => self.hasher.update([0x00]),
             Some(v) => {
-                self.hasher.update(&[0x01]);
+                self.hasher.update([0x01]);
                 self.update_bytes(v);
             }
         }

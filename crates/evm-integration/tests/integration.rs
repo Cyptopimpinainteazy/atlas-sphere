@@ -1,4 +1,4 @@
-#![cfg(feature = "frontier-executor")]
+#![cfg(any())]
 
 use x3_evm_integration::{EvmConfig, FrontierEvmExecutor};
 

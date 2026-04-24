@@ -1,10 +1,7 @@
 //! Mock runtime for pallet-swarm tests.
 
 use crate as pallet_swarm;
-use frame_support::{
-    derive_impl, parameter_types,
-    traits::{ConstU128, ConstU32, ConstU64},
-};
+use frame_support::{derive_impl, parameter_types, traits::ConstU32};
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
@@ -68,9 +65,9 @@ impl pallet_balances::Config for Test {
     type MaxReserves = ConstU32<50>;
     type ReserveIdentifier = [u8; 8];
     type FreezeIdentifier = ();
+    type MaxHolds = ConstU32<0>;
     type MaxFreezes = ConstU32<0>;
     type RuntimeHoldReason = ();
-    type RuntimeFreezeReason = ();
 }
 
 parameter_types! {
@@ -103,7 +100,7 @@ impl pallet_swarm::Config for Test {
     type SlashAmount = SlashAmount;
     type MaxTasksPerContributor = MaxTasksPerContributor;
     type MaxJuryVoters = MaxJuryVoters;
-    type WeightInfo = ();
+    type WeightInfo = crate::weights::SubstrateWeight<Test>;
 }
 
 /// Build genesis storage for tests.

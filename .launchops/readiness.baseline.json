@@ -1,0 +1,18 @@
+{
+  "_comment": "Baseline readiness snapshot as of 2026-04-23. CI gate (scripts/ci/verify_launchops_readiness_baseline.sh) compares .launchops/readiness.json against this file. Regression rules: scan_score may not drop by more than READINESS_TOLERANCE (default 0.5) from the baselined scan_score, each module may not drop by more than READINESS_MODULE_TOLERANCE (default 1.0) from its baselined score, and status may not regress (non-BLOCKED -> BLOCKED). Silent improvements (score climbs, status unblocks, new modules appear) emit advisory warnings and are locked in with UPDATE_BASELINE=1 in the same PR. Optional strict mode X3_REQUIRE_READINESS_UNBLOCKED=1 fails on any BLOCKED status regardless of baseline; this is OFF until the mainnet go-live PR flips it on.",
+  "accepted_reason": "Canonical readiness is 60.63 / BLOCKED per mainnet scorecard 2026-04-22 (canonical_readiness 20.8% hard-gate view). Baselined as BLOCKED to match the scorecard; the gate enforces no regression, not unblocked status. Flip to strict once Wave 0 workspace burn-down + red_flags burn-down complete.",
+  "status": "BLOCKED",
+  "scan_score_floor": 60.63,
+  "module_breakdown_floor": {
+    "bridge": 53.88,
+    "consensus": 55.39,
+    "cross_vm": 55.26,
+    "dex": 71.57,
+    "docs": 78.23,
+    "gpu_validator": 70.95,
+    "launch_ops": 79.13,
+    "security": 51.33,
+    "universal_asset_kernel": 71.4,
+    "wallet_explorer": 78.98
+  }
+}

@@ -24,6 +24,10 @@ sp-core = { workspace = true }
 # X3-specific dependencies
 pallet-x3-kernel = { path = "../x3-kernel", default-features = false }
 
+[dev-dependencies]
+pallet-balances = { workspace = true }
+pallet-timestamp = { workspace = true }
+
 [features]
 default = ["std"]
 std = [

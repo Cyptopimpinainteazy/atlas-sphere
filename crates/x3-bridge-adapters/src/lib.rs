@@ -99,7 +99,9 @@ pub use pallet_x3_kernel::StateChange;
 
 // ── CrossVmDispatcher re-export ──────────────────────────────────────────────
 // Re-export the CrossVmDispatcher trait and result types for convenience.
-pub use x3_cross_vm_bridge::{CrossVmDispatcher, CrossVmResult};
+pub use x3_cross_vm_bridge::{
+    CrossVmCall, CrossVmDispatcher, CrossVmReceipt, CrossVmResult, CrossVmStatus, VmId,
+};
 
 // ── SubstrateClientBalanceAdapter ────────────────────────────────────────────
 
@@ -765,11 +767,13 @@ where
     /// Execute an SVM instruction via the kernel's SVM adapter.
     ///
     /// Routes to the `RbpfSvmExecutor` through the kernel's SVM pathway.
+    /// Note: SVM execution is currently not exposed through the runtime API.
+    /// This method returns a failed status until the API is extended.
     fn execute_svm_tx(
         &self,
         _caller: &[u8; 32],
         program_id: &[u8; 32],
-        input: &[u8],
+        _input: &[u8],
     ) -> Result<CrossVmResult, sp_runtime::DispatchError> {
         let at = self.best_hash();
         let api = self.client.runtime_api();
@@ -787,14 +791,43 @@ where
             return Ok(CrossVmResult::failed(b"program not found".to_vec(), 1_000));
         }
 
-        match api.submit_svm_instruction(at, *program_id, input.to_vec()) {
-            Ok(Ok(output)) => Ok(CrossVmResult::success(output, 5_000)),
-            Ok(Err(err)) => Ok(CrossVmResult::failed(err, 5_000)),
-            Err(e) => {
-                log::error!("[RuntimeDispatcher] SVM runtime API error: {:?}", e);
-                Err(sp_runtime::DispatchError::Other("SVM runtime API error"))
-            }
-        }
+        // SVM instruction submission is not yet exposed through the runtime API.
+        // Return a deterministic failure rather than attempting a non-existent API call.
+        log::warn!(
+            "[RuntimeDispatcher] SVM execution not yet exposed via runtime API. Program: 0x{}",
+            program_id
+                .iter()
+                .take(8)
+                .map(|b| format!("{:02x}", b))
+                .collect::<String>()
+        );
+        Ok(CrossVmResult::failed(
+            b"SVM execution API not yet available".to_vec(),
+            5_000,
+        ))
+    }
+
+    /// Execute an x3VM call.
+    ///
+    /// The runtime API exposed to this adapter currently provides concrete EVM/SVM
+    /// execution entrypoints but does not yet expose a native x3VM submission
+    /// endpoint. Until that API is wired, this dispatcher fails closed with a
+    /// canonical receipt instead of pretending success.
+    fn execute_x3vm_tx(
+        &self,
+        _caller: &[u8; 32],
+        call: &x3_cross_vm_bridge::CrossVmCall,
+    ) -> Result<x3_cross_vm_bridge::CrossVmReceipt, sp_runtime::DispatchError> {
+        call.ensure_current_version()?;
+
+        Ok(x3_cross_vm_bridge::CrossVmReceipt {
+            call_hash: call.call_hash(&H256::zero()),
+            source_state_root: H256::zero(),
+            target_state_root: H256::zero(),
+            status: x3_cross_vm_bridge::CrossVmStatus::InternalError,
+            gas_used: 0,
+            logs: Vec::new(),
+        })
     }
 
     /// Get EVM balance for an address.

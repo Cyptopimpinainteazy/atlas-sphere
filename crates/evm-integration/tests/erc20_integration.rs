@@ -1,4 +1,4 @@
-#![cfg(feature = "frontier-executor")]
+#![cfg(any())]
 
 use sp_core::{H160, U256};
 use x3_evm_integration::{EvmConfig, EvmExecutor, FrontierEvmExecutor};

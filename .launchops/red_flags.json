@@ -1,0 +1,3502 @@
+[
+  {
+    "severity": "high",
+    "file": "crates/apotheosis-tx/src/builder.rs",
+    "line": 416,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/apotheosis-tx/src/routes.rs",
+    "line": 415,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/apotheosis-tx/src/routes.rs",
+    "line": 434,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 621,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 624,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 652,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 712,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 771,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 791,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 800,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 802,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 803,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 815,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 816,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 901,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 942,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 943,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 948,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/atomic-swap-orchestrator/src/lib.rs",
+    "line": 949,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/chronos-flash/src/intent.rs",
+    "line": 221,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/chronos-flash/src/oracle.rs",
+    "line": 156,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/chronos-flash/src/router.rs",
+    "line": 210,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 176,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 179,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 181,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 184,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 191,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 194,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/attestation.rs",
+    "line": 197,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/enclave.rs",
+    "line": 167,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/enclave.rs",
+    "line": 181,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/enclave.rs",
+    "line": 183,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/lib.rs",
+    "line": 304,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/confidential-gpu/src/threshold.rs",
+    "line": 115,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/confidential-gpu/src/threshold.rs",
+    "line": 220,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/lib.rs",
+    "line": 613,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/lib.rs",
+    "line": 641,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/lib.rs",
+    "line": 688,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/lib.rs",
+    "line": 706,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/model.rs",
+    "line": 147,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/model.rs",
+    "line": 163,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/shard_planner.rs",
+    "line": 181,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/shard_planner.rs",
+    "line": 206,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/shard_planner.rs",
+    "line": 231,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/contention-predictor/src/shard_planner.rs",
+    "line": 261,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+    "line": 125,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+    "line": 138,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+    "line": 147,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+    "line": 157,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/failover.rs",
+    "line": 126,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/failover.rs",
+    "line": 135,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/kernels.rs",
+    "line": 170,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/kernels.rs",
+    "line": 178,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/kernels.rs",
+    "line": 203,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+    "line": 62,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+    "line": 88,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+    "line": 101,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-gpu-validator/src/lib.rs",
+    "line": 111,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-gpu-validator/src/orchestrator.rs",
+    "line": 204,
+    "pattern": "#[ignore]",
+    "reason": "Ignored test"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+    "line": 110,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+    "line": 123,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+    "line": 137,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-chain-gpu-validator/src/svm_validator.rs",
+    "line": 146,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 751,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 758,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 765,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 773,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 775,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 808,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 811,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 815,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 816,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 820,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 848,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 871,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 873,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 874,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 878,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 879,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 880,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 884,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 885,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/accounting.rs",
+    "line": 889,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/adapters.rs",
+    "line": 385,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/arbitrage.rs",
+    "line": 499,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/arbitrage.rs",
+    "line": 507,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/lib.rs",
+    "line": 457,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 72,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 73,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 105,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 397,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 441,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 523,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/migration.rs",
+    "line": 821,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 397,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 402,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 487,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 493,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 515,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 528,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/partner.rs",
+    "line": 534,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+    "line": 224,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+    "line": 240,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+    "line": 258,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+    "line": 285,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/rebalance.rs",
+    "line": 418,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+    "line": 208,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+    "line": 360,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+    "line": 394,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+    "line": 596,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+    "line": 605,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/rebalancing.rs",
+    "line": 607,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/risk.rs",
+    "line": 445,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/risk.rs",
+    "line": 454,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 641,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 835,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 841,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 995,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1026,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1036,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1046,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1056,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1059,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1068,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1078,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1080,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1081,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1083,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1087,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/router.rs",
+    "line": 1089,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 239,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 456,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 481,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 503,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 511,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 513,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 520,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/state.rs",
+    "line": 538,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/tracking.rs",
+    "line": 318,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/tracking.rs",
+    "line": 479,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/types.rs",
+    "line": 35,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/utils.rs",
+    "line": 659,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/utils.rs",
+    "line": 667,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+    "line": 327,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+    "line": 365,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+    "line": 377,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+    "line": 388,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-chain-position-manager/src/vault_controller.rs",
+    "line": 400,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/canonical.rs",
+    "line": 304,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/canonical.rs",
+    "line": 323,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/canonical.rs",
+    "line": 412,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/canonical.rs",
+    "line": 472,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/canonical.rs",
+    "line": 487,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 225,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 1080,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 1498,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2307,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2585,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2600,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2601,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2621,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2651,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2653,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2672,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2674,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2691,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2693,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2703,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2716,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2775,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2783,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2792,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2796,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2814,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2835,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2843,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2862,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2873,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 2950,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3003,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3006,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3014,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3035,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3037,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3061,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3070,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3072,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3117,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3120,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3153,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3156,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3175,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3177,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3196,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3198,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3216,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3218,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3239,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3241,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3289,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3298,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3307,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3315,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3337,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3351,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3377,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3386,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3397,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3402,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3437,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3459,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3485,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3488,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3520,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3521,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3590,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3591,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3609,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3618,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3627,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3634,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3652,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3653,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3677,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3686,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3688,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3704,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3716,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3915,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3919,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3948,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3952,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3979,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3983,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 3997,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4018,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4022,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4064,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4068,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4102,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4113,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4128,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4156,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4157,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4172,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4197,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4208,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4212,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4227,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4250,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4266,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4278,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4339,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4359,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4431,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4441,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4443,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4447,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4476,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4509,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4524,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4527,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4531,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4584,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4610,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4616,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4633,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4648,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4661,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4674,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4683,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/lib.rs",
+    "line": 4704,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 523,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 534,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 559,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 569,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 583,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 607,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_proof_validator.rs",
+    "line": 630,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+    "line": 174,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+    "line": 367,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+    "line": 494,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs",
+    "line": 549,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/abi.rs",
+    "line": 273,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/abi.rs",
+    "line": 282,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+    "line": 43,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+    "line": 67,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+    "line": 92,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+    "line": 127,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+    "line": 283,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+    "line": 306,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 242,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 245,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 248,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 264,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 277,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 295,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 307,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 325,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 366,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 374,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 383,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 401,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 409,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+    "line": 417,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 72,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 77,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 82,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 87,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 92,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 97,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 102,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 149,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 183,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 232,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 244,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 255,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 264,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 269,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 275,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 317,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 384,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 389,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 394,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 399,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 418,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 487,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/persistence.rs",
+    "line": 520,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/rpc_client.rs",
+    "line": 65,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/rpc_client.rs",
+    "line": 333,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 52,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 292,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 326,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 460,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 626,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 650,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/state_machine.rs",
+    "line": 653,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 39,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 44,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 71,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 92,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 112,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 115,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 119,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 120,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 135,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 137,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 141,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 142,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 147,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 148,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 151,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 152,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 177,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 198,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 218,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 221,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 233,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 244,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 264,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 284,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 291,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 389,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 391,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 392,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 395,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 396,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 409,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 414,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 417,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 418,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 456,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 459,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 465,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 466,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 478,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 481,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 484,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 485,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 508,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 523,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 525,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 526,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 572,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 574,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 593,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 612,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 613,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 614,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 628,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 643,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 645,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 664,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 683,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 684,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 685,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 699,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 704,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 737,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 752,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 756,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 776,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/cross-vm-coordinator/src/tests.rs",
+    "line": 819,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/audit.rs",
+    "line": 195,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/client.rs",
+    "line": 169,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/client.rs",
+    "line": 171,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/client.rs",
+    "line": 180,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/client.rs",
+    "line": 197,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/client.rs",
+    "line": 200,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/hsm.rs",
+    "line": 156,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/hsm.rs",
+    "line": 165,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/hsm.rs",
+    "line": 168,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/hsm.rs",
+    "line": 169,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/hsm.rs",
+    "line": 176,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/hsm.rs",
+    "line": 177,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 414,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 422,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 424,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 431,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 456,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 462,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 470,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 487,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 494,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 502,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/custody-service/src/service.rs",
+    "line": 519,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dream-mining/src/scheduler.rs",
+    "line": 397,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dream-mining/src/scheduler.rs",
+    "line": 400,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dream-mining/src/scheduler.rs",
+    "line": 402,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dream-mining/src/scheduler.rs",
+    "line": 422,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dream-mining/src/scheduler.rs",
+    "line": 436,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dream-mining/src/scheduler.rs",
+    "line": 439,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 53,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 53,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 158,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 158,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 163,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 163,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 190,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/dylint-determinism/src/lib.rs",
+    "line": 235,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/evm-integration/src/lib.rs",
+    "line": 414,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/evm-integration/src/lib.rs",
+    "line": 432,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/evm-integration/src/lib.rs",
+    "line": 462,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/lib.rs",
+    "line": 574,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/mini_evm.rs",
+    "line": 11,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/mini_evm.rs",
+    "line": 13,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/mini_evm.rs",
+    "line": 14,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/mini_evm.rs",
+    "line": 15,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/mini_evm.rs",
+    "line": 16,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/evm-integration/src/mini_evm.rs",
+    "line": 257,
+    "pattern": "expect()",
+    "reason": ".expect() in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/evm-integration/src/state.rs",
+    "line": 363,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/evm-integration/src/state.rs",
+    "line": 399,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/evm-integration/src/state.rs",
+    "line": 401,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/adapter.rs",
+    "line": 449,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/adapter.rs",
+    "line": 476,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/assets.rs",
+    "line": 337,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/assets.rs",
+    "line": 347,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/assets.rs",
+    "line": 370,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/assets.rs",
+    "line": 372,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/base.rs",
+    "line": 533,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/base.rs",
+    "line": 534,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/base.rs",
+    "line": 535,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/base.rs",
+    "line": 540,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/base.rs",
+    "line": 554,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/registry.rs",
+    "line": 1209,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/registry.rs",
+    "line": 1213,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/universal.rs",
+    "line": 318,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/universal.rs",
+    "line": 324,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/universal.rs",
+    "line": 329,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/universal.rs",
+    "line": 349,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/universal.rs",
+    "line": 352,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/chains/universal.rs",
+    "line": 365,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/router.rs",
+    "line": 665,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/router.rs",
+    "line": 678,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/router.rs",
+    "line": 693,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/router.rs",
+    "line": 705,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/rpc.rs",
+    "line": 359,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/rpc.rs",
+    "line": 390,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "medium",
+    "file": "crates/external-chains/src/rpc_http.rs",
+    "line": 9,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/settlement_integration.rs",
+    "line": 456,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/settlement_integration.rs",
+    "line": 530,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/external-chains/src/settlement_integration.rs",
+    "line": 580,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/gossip_bridge.rs",
+    "line": 342,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/gossip_bridge.rs",
+    "line": 375,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/gossip_bridge.rs",
+    "line": 386,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 620,
+    "pattern": "stub",
+    "reason": "Stub/placeholder marker in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 742,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 755,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 778,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 802,
+    "pattern": "panic!",
+    "reason": "panic! in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 878,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 894,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 913,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "critical",
+    "file": "crates/flash-finality/src/lib.rs",
+    "line": 962,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/gpu-sig-verifier/src/lib.rs",
+    "line": 152,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/gpu-sig-verifier/src/lib.rs",
+    "line": 331,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/gpu-sig-verifier/src/lib.rs",
+    "line": 335,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/gpu-sig-verifier/src/lib.rs",
+    "line": 344,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/gpu-sig-verifier/src/lib.rs",
+    "line": 355,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  },
+  {
+    "severity": "high",
+    "file": "crates/gpu-sig-verifier/src/lib.rs",
+    "line": 356,
+    "pattern": "unwrap()",
+    "reason": "Unsafe unwrap in production code"
+  }
+]

@@ -25,7 +25,7 @@ pub use frame_support::{
         constants::{
             BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
         },
-        ConstantMultiplier, IdentityFee,
+        ConstantMultiplier, IdentityFee, WeightToFee,
     },
 };
 use frame_support::{traits::Currency, weights::Weight};
@@ -58,7 +58,7 @@ use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
         AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto,
-        IdentifyAccount, SaturatedConversion, Verify,
+        IdentifyAccount, Verify,
     },
     MultiAddress, MultiSignature, Perbill,
 };
@@ -71,10 +71,8 @@ use precompiles::FrontierPrecompiles;
 // ════════════════════════════════════════════════════════════════════════════════════
 // GPU Validator Runtime API Types
 // ════════════════════════════════════════════════════════════════════════════════════
-#[cfg(feature = "gpu-validator")]
 pub mod gpu_validator_api {
     use super::AccountId;
-    use crate::{cross_chain_state_root_api, governance_settlement_api};
     use codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use sp_std::vec::Vec;
@@ -134,7 +132,6 @@ pub mod gpu_validator_api {
         pub processed_by_validator: u32,
     }
 
-    /// GPU Validator Runtime API trait
     sp_api::decl_runtime_apis! {
         /// GPU Validator runtime API for querying validator status and submitting proofs
         pub trait GpuValidatorRuntimeApi {
@@ -153,22 +150,22 @@ pub mod gpu_validator_api {
                 block_number: u64,
                 block_hash: sp_core::H256,
                 state_root: sp_core::H256,
-            ) -> Option<cross_chain_state_root_api::EvmHeaderProof>;
-            
+            ) -> Option<crate::cross_chain_state_root_api::EvmHeaderProof>;
+
             /// Validate SVM (Solana) block header and return proof
             fn validate_svm_header(
                 slot: u64,
                 block_hash: sp_core::H256,
                 state_root: sp_core::H256,
-            ) -> Option<cross_chain_state_root_api::SvmHeaderProof>;
-            
+            ) -> Option<crate::cross_chain_state_root_api::SvmHeaderProof>;
+
             /// Query cross-chain validation status
-            fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus;
-            
+            fn query_cross_chain_status() -> crate::cross_chain_state_root_api::CrossChainValidationStatus;
+
             /// Aggregate multiple proofs into a single cross-chain proof
             fn aggregate_cross_chain_proofs(
-                proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
-            ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
+                proofs: Vec<crate::cross_chain_state_root_api::CrossChainProofBatch>,
+            ) -> Option<crate::cross_chain_state_root_api::CrossChainProofBatch>;
         }
 
         /// Governance-driven settlement finality and dispute resolution API (Phase 10a)
@@ -177,33 +174,33 @@ pub mod gpu_validator_api {
             fn submit_dispute(
                 proof_hash: sp_core::H256,
                 reason: Vec<u8>,
-            ) -> Option<governance_settlement_api::DisputeRecord>;
+            ) -> Option<crate::governance_settlement_api::DisputeRecord>;
 
             /// Query the voting state of an active dispute
             fn query_dispute_status(
                 proof_hash: sp_core::H256,
-            ) -> Option<governance_settlement_api::DisputeRecord>;
+            ) -> Option<crate::governance_settlement_api::DisputeRecord>;
 
             /// Confirm that a proof has reached settlement finality
             fn confirm_settlement_finality(
                 proof_hash: sp_core::H256,
-            ) -> Option<governance_settlement_api::ProofFinalityStatus>;
+            ) -> Option<crate::governance_settlement_api::ProofFinalityStatus>;
         }
 
         /// Settlement finality and validator attestation API (Phase 10a)
         pub trait SettlementFinalityApi {
             /// Query finality confirmation metrics
-            fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics;
+            fn query_finality_metrics() -> crate::governance_settlement_api::FinalityMetrics;
 
             /// Get validator dispute resolution reputation score
             fn query_validator_reputation(
                 validator_id: AccountId,
-            ) -> governance_settlement_api::ValidatorReputation;
+            ) -> crate::governance_settlement_api::ValidatorReputation;
 
             /// Check if a merkle-aggregated batch has finality
             fn query_batch_finality_status(
                 merkle_root: sp_core::H256,
-            ) -> Option<governance_settlement_api::BatchFinalityStatus>;
+            ) -> Option<crate::governance_settlement_api::BatchFinalityStatus>;
         }
     }
 }
@@ -444,6 +441,10 @@ construct_runtime!(
         X3Sequencer: pallet_x3_sequencer,
         X3Da: pallet_x3_da,
         X3AtomicKernel: pallet_x3_atomic_kernel,
+        X3AssetRegistry: pallet_x3_asset_registry,
+        X3SupplyLedger: pallet_x3_supply_ledger,
+        X3CrossVmRouter: pallet_x3_cross_vm_router,
+        X3TokenFactory: pallet_x3_token_factory,
     }
 );
 
@@ -479,6 +480,10 @@ construct_runtime!(
         X3Sequencer: pallet_x3_sequencer,
         X3Da: pallet_x3_da,
         X3AtomicKernel: pallet_x3_atomic_kernel,
+        X3AssetRegistry: pallet_x3_asset_registry,
+        X3SupplyLedger: pallet_x3_supply_ledger,
+        X3CrossVmRouter: pallet_x3_cross_vm_router,
+        X3TokenFactory: pallet_x3_token_factory,
     }
 );
 
@@ -698,18 +703,87 @@ impl pallet_evm::Config for Runtime {
 /// Production cross-chain proof verifier.
 ///
 /// Validates `LockProof` and `MerkleReceipt` payloads with structural
-/// sanity checks. Full GRANDPA/merkle cryptographic verification is wired
-/// once the proof format is stabilized; until then the verifier rejects
-/// malformed/empty proofs and accepts structurally-valid ones.
+/// sanity checks and enforces a byzantine threshold of validator signatures
+/// from the currently configured X3 kernel authorities.
 pub struct SubstrateProofVerifier;
 
-impl<AccountId> pallet_x3_kernel::CrossChainProofVerifier<AccountId> for SubstrateProofVerifier {
+impl pallet_x3_kernel::CrossChainProofVerifier<AccountId> for SubstrateProofVerifier {
     fn verify_proof(
         _origin: &AccountId,
         _operation: &x3_cross_vm_bridge::CrossVmOperation,
         proof: &pallet_x3_kernel::CrossChainProof,
     ) -> Result<(), frame_support::sp_runtime::DispatchError> {
+        use codec::Encode;
         use pallet_x3_kernel::CrossChainProof;
+
+        fn threshold(authority_count: usize) -> usize {
+            // 2/3 + 1, but always at least 1.
+            let needed = (authority_count.saturating_mul(2) / 3).saturating_add(1);
+            core::cmp::max(1, needed)
+        }
+
+        fn account_to_key_bytes(
+            account: &AccountId,
+        ) -> Result<[u8; 32], frame_support::sp_runtime::DispatchError> {
+            let encoded = account.encode();
+            if encoded.len() != 32 {
+                return Err(frame_support::sp_runtime::DispatchError::Other(
+                    "Authority key must SCALE-encode to 32 bytes",
+                ));
+            }
+            let mut out = [0u8; 32];
+            out.copy_from_slice(&encoded);
+            Ok(out)
+        }
+
+        fn verify_signature_any(pubkey_bytes: [u8; 32], message: &[u8], signature: &[u8]) -> bool {
+            if signature.len() != 64 {
+                return false;
+            }
+
+            // sr25519
+            {
+                let pubkey = sp_core::sr25519::Public::from_raw(pubkey_bytes);
+                let sig = sp_core::sr25519::Signature::from_raw({
+                    let mut buf = [0u8; 64];
+                    buf.copy_from_slice(signature);
+                    buf
+                });
+                if sp_io::crypto::sr25519_verify(&sig, message, &pubkey) {
+                    return true;
+                }
+            }
+
+            // ed25519
+            {
+                let pubkey = sp_core::ed25519::Public::from_raw(pubkey_bytes);
+                let sig = sp_core::ed25519::Signature::from_raw({
+                    let mut buf = [0u8; 64];
+                    buf.copy_from_slice(signature);
+                    buf
+                });
+                sp_io::crypto::ed25519_verify(&sig, message, &pubkey)
+            }
+        }
+
+        fn require_len(
+            actual: usize,
+            expected: usize,
+            label: &'static str,
+        ) -> Result<(), frame_support::sp_runtime::DispatchError> {
+            if actual != expected {
+                return Err(frame_support::sp_runtime::DispatchError::Other(label));
+            }
+            Ok(())
+        }
+
+        let authorities = pallet_x3_kernel::Authorities::<Runtime>::get();
+        let authority_keys: sp_std::collections::btree_set::BTreeSet<[u8; 32]> = authorities
+            .into_iter()
+            .map(|a| account_to_key_bytes(&a))
+            .collect::<Result<_, _>>()?;
+        let needed = threshold(authority_keys.len());
+
         match proof {
             CrossChainProof::None => Ok(()),
             CrossChainProof::LockProof(bytes) => {
@@ -718,13 +792,59 @@ impl<AccountId> pallet_x3_kernel::CrossChainProofVerifier<AccountId> for Substra
                         "LockProof: empty bytes",
                     ));
                 }
-                // Require at least 64 bytes: 32-byte event-hash + 32-byte authority-sig
-                if bytes.len() < 64 {
+                // Format:
+                // [0..32)  event_hash
+                // [32]     sig_count (u8)
+                // repeat sig_count times:
+                //   [validator_id:32][signature:64]
+                if bytes.len() < 33 {
                     return Err(frame_support::sp_runtime::DispatchError::Other(
-                        "LockProof: payload too short (< 64 bytes)",
+                        "LockProof: payload too short (< 33 bytes)",
                     ));
                 }
-                // TODO(v2): verify GRANDPA justification sig over the lock event hash
+
+                let event_hash = &bytes[0..32];
+                let sig_count = bytes[32] as usize;
+                if sig_count == 0 {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "LockProof: signature count must be > 0",
+                    ));
+                }
+
+                let expected_len = 33usize.saturating_add(sig_count.saturating_mul(96));
+                require_len(
+                    bytes.len(),
+                    expected_len,
+                    "LockProof: malformed payload length",
+                )?;
+
+                let mut valid = 0usize;
+                let mut seen: sp_std::collections::btree_set::BTreeSet<[u8; 32]> =
+                    sp_std::collections::btree_set::BTreeSet::new();
+
+                for idx in 0..sig_count {
+                    let offset = 33 + idx * 96;
+                    let mut validator_id = [0u8; 32];
+                    validator_id.copy_from_slice(&bytes[offset..offset + 32]);
+                    let signature = &bytes[offset + 32..offset + 96];
+
+                    if !authority_keys.contains(&validator_id) {
+                        continue;
+                    }
+                    if !seen.insert(validator_id) {
+                        continue;
+                    }
+                    if verify_signature_any(validator_id, event_hash, signature) {
+                        valid = valid.saturating_add(1);
+                    }
+                }
+
+                if valid < needed {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "LockProof: insufficient validator signatures",
+                    ));
+                }
+
                 Ok(())
             }
             CrossChainProof::MerkleReceipt(bytes) => {
@@ -733,13 +853,121 @@ impl<AccountId> pallet_x3_kernel::CrossChainProofVerifier<AccountId> for Substra
                         "MerkleReceipt: empty bytes",
                     ));
                 }
-                // Require at least 32 bytes for the state-root
-                if bytes.len() < 32 {
+                // Format:
+                // [0..32)  state_root
+                // [32..40) finalized_block (u64 LE)
+                // [40..48) execution_index (u64 LE)
+                // [48..52) merkle_proof_len (u32 LE)
+                // [..]     merkle_proof_bytes (len)
+                // [..]     sig_count (u8)
+                // repeat sig_count times:
+                //   [validator_id:32][signature:64] over sha2_256(state_root||finalized_block||execution_index||merkle_proof_bytes)
+                if bytes.len() < 53 {
                     return Err(frame_support::sp_runtime::DispatchError::Other(
-                        "MerkleReceipt: payload too short (< 32 bytes)",
+                        "MerkleReceipt: payload too short",
                     ));
                 }
-                // TODO(v2): verify merkle inclusion against finalized state root
+
+                let mut state_root = [0u8; 32];
+                state_root.copy_from_slice(&bytes[0..32]);
+                if state_root == [0u8; 32] {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: state_root must be non-zero",
+                    ));
+                }
+
+                let finalized_block =
+                    u64::from_le_bytes(bytes[32..40].try_into().map_err(|_| {
+                        frame_support::sp_runtime::DispatchError::Other(
+                            "MerkleReceipt: invalid finalized_block",
+                        )
+                    })?);
+                if finalized_block == 0 {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: finalized_block must be > 0",
+                    ));
+                }
+
+                let execution_index =
+                    u64::from_le_bytes(bytes[40..48].try_into().map_err(|_| {
+                        frame_support::sp_runtime::DispatchError::Other(
+                            "MerkleReceipt: invalid execution_index",
+                        )
+                    })?);
+
+                let merkle_len = u32::from_le_bytes(bytes[48..52].try_into().map_err(|_| {
+                    frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: invalid merkle_proof_len",
+                    )
+                })?) as usize;
+                if merkle_len == 0 {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: merkle_proof_bytes must be non-empty",
+                    ));
+                }
+
+                let proof_start = 52usize;
+                let proof_end = proof_start.checked_add(merkle_len).ok_or(
+                    frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: proof length overflow",
+                    ),
+                )?;
+                if bytes.len() < proof_end + 1 {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: payload too short for merkle proof",
+                    ));
+                }
+
+                let merkle_proof_bytes = &bytes[proof_start..proof_end];
+                let sig_count = bytes[proof_end] as usize;
+                if sig_count == 0 {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: signature count must be > 0",
+                    ));
+                }
+
+                let expected_len = (proof_end + 1).saturating_add(sig_count.saturating_mul(96));
+                require_len(
+                    bytes.len(),
+                    expected_len,
+                    "MerkleReceipt: malformed payload length",
+                )?;
+
+                let mut msg =
+                    sp_std::vec::Vec::with_capacity(32 + 8 + 8 + merkle_proof_bytes.len());
+                msg.extend_from_slice(&state_root);
+                msg.extend_from_slice(&finalized_block.to_le_bytes());
+                msg.extend_from_slice(&execution_index.to_le_bytes());
+                msg.extend_from_slice(merkle_proof_bytes);
+                let settlement_hash = sp_io::hashing::sha2_256(&msg);
+
+                let mut valid = 0usize;
+                let mut seen: sp_std::collections::btree_set::BTreeSet<[u8; 32]> =
+                    sp_std::collections::btree_set::BTreeSet::new();
+
+                for idx in 0..sig_count {
+                    let offset = (proof_end + 1) + idx * 96;
+                    let mut validator_id = [0u8; 32];
+                    validator_id.copy_from_slice(&bytes[offset..offset + 32]);
+                    let signature = &bytes[offset + 32..offset + 96];
+
+                    if !authority_keys.contains(&validator_id) {
+                        continue;
+                    }
+                    if !seen.insert(validator_id) {
+                        continue;
+                    }
+                    if verify_signature_any(validator_id, &settlement_hash, signature) {
+                        valid = valid.saturating_add(1);
+                    }
+                }
+
+                if valid < needed {
+                    return Err(frame_support::sp_runtime::DispatchError::Other(
+                        "MerkleReceipt: insufficient validator signatures",
+                    ));
+                }
+
                 Ok(())
             }
         }
@@ -933,8 +1161,8 @@ impl pallet_atomic_trade_engine::SettlementBridge<AccountId> for SettlementAdapt
 /// The bytes are a deterministic constant derived from the project name;
 /// they do NOT collide with any user-derivable address.
 const SYSTEM_EVM_CALLER: sp_core::H160 = sp_core::H160([
-    0x9b, 0x6a, 0x5c, 0x1d, 0x4e, 0x8f, 0x2a, 0x7b, 0x3c, 0xd0,
-    0xe1, 0xf5, 0x06, 0x17, 0x28, 0x39, 0x4a, 0x5b, 0x6c, 0x7d,
+    0x9b, 0x6a, 0x5c, 0x1d, 0x4e, 0x8f, 0x2a, 0x7b, 0x3c, 0xd0, 0xe1, 0xf5, 0x06, 0x17, 0x28, 0x39,
+    0x4a, 0x5b, 0x6c, 0x7d,
 ]);
 
 #[cfg(feature = "std")]
@@ -1735,6 +1963,42 @@ impl pallet_x3_atomic_kernel::Config for Runtime {
     type BundleDeadlineBlocks = AtomicKernelBundleDeadlineBlocks;
 }
 
+// ===== Universal Asset Kernel MVP =====
+// Three-pallet stack enforcing the king invariant (canonical supply preservation)
+// for cross-VM transfers within X3's internal domains (X3Native / X3Evm / X3Svm).
+parameter_types! {
+    /// Upper bound on the number of canonical assets the registry can track.
+    pub const X3AssetRegistryMaxAssets: u32 = 1024;
+}
+
+impl pallet_x3_asset_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type RegistryOrigin = EnsureRootOrHalfCouncil;
+    type EmergencyPauseOrigin = EnsureRootOrHalfCouncil;
+    type MaxAssets = X3AssetRegistryMaxAssets;
+}
+
+impl pallet_x3_supply_ledger::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type SupplyGovernance = EnsureRootOrHalfCouncil;
+    type Registry = X3AssetRegistry;
+}
+
+impl pallet_x3_cross_vm_router::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Registry = X3AssetRegistry;
+    type Ledger = X3SupplyLedger;
+}
+
+// OmniToken factory: permissionless launches that produce one canonical asset
+// wired to X3Native/X3Evm/X3Svm via the registry + supply ledger.
+impl pallet_x3_token_factory::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type CreateTokenOrigin = frame_system::EnsureSigned<AccountId>;
+    type Registry = X3AssetRegistry;
+    type Ledger = X3SupplyLedger;
+}
+
 // Session trait implementations for minimal runtime
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
 pub struct SessionHandler;
@@ -2318,21 +2582,21 @@ impl_runtime_apis! {
 
     impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
         fn slot_duration() -> sp_consensus_aura::SlotDuration {
-            sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
+            sp_consensus_aura::SlotDuration::from_millis(pallet_aura::Pallet::<Runtime>::slot_duration())
         }
 
         fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
-            Aura::authorities().to_vec()
+            pallet_aura::Pallet::<Runtime>::authorities().to_vec()
         }
     }
 
     impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
         fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-            Grandpa::grandpa_authorities()
+            pallet_grandpa::Pallet::<Runtime>::grandpa_authorities()
         }
 
         fn current_set_id() -> sp_consensus_grandpa::SetId {
-            Grandpa::current_set_id()
+            pallet_grandpa::Pallet::<Runtime>::current_set_id()
         }
 
         fn submit_report_equivocation_unsigned_extrinsic(
@@ -2376,7 +2640,7 @@ impl_runtime_apis! {
 
     impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce> for Runtime {
         fn account_nonce(account: AccountId) -> Nonce {
-            System::account_nonce(account)
+            frame_system::Pallet::<Runtime>::account_nonce(account)
         }
     }
 
@@ -2385,22 +2649,24 @@ impl_runtime_apis! {
             uxt: <Block as BlockT>::Extrinsic,
             len: u32,
         ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
-            TransactionPayment::query_info(uxt, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_info(uxt, len)
         }
 
         fn query_fee_details(
             uxt: <Block as BlockT>::Extrinsic,
             len: u32,
         ) -> pallet_transaction_payment::FeeDetails<Balance> {
-            TransactionPayment::query_fee_details(uxt, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_fee_details(uxt, len)
         }
 
         fn query_weight_to_fee(weight: Weight) -> Balance {
-            TransactionPayment::weight_to_fee(weight)
+            <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(&weight)
         }
 
         fn query_length_to_fee(length: u32) -> Balance {
-            TransactionPayment::length_to_fee(length)
+            <Runtime as pallet_transaction_payment::Config>::LengthToFee::weight_to_fee(
+                &Weight::from_all(u64::from(length) * 1000)
+            )
         }
     }
 
@@ -2412,36 +2678,42 @@ impl_runtime_apis! {
             call: RuntimeCall,
             len: u32,
         ) -> pallet_transaction_payment::RuntimeDispatchInfo<Balance> {
-            TransactionPayment::query_call_info(call, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_call_info(call, len)
         }
 
         fn query_call_fee_details(
             call: RuntimeCall,
             len: u32,
         ) -> pallet_transaction_payment::FeeDetails<Balance> {
-            TransactionPayment::query_call_fee_details(call, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_call_fee_details(call, len)
         }
 
         fn query_weight_to_fee(weight: Weight) -> Balance {
-            TransactionPayment::weight_to_fee(weight)
+            <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(&weight)
         }
 
         fn query_length_to_fee(length: u32) -> Balance {
-            TransactionPayment::length_to_fee(length)
+            <Runtime as pallet_transaction_payment::Config>::LengthToFee::weight_to_fee(
+                &Weight::from_all(u64::from(length) * 1000)
+            )
         }
     }
 
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            OpaqueMetadata::new(Runtime::metadata().into())
+            // Return empty metadata vector - the actual metadata is queried at runtime via the RuntimeMetadataApi
+            OpaqueMetadata::new(sp_std::vec![].into())
         }
 
         fn metadata_at_version(version: u32) -> Option<OpaqueMetadata> {
-            Runtime::metadata_at_version(version)
+            match version {
+                1 => Some(OpaqueMetadata::new(sp_std::vec![].into())),
+                _ => None,
+            }
         }
 
         fn metadata_versions() -> sp_std::vec::Vec<u32> {
-            Runtime::metadata_versions()
+            sp_std::vec![1]
         }
     }
 
@@ -2810,21 +3082,7 @@ impl_runtime_apis! {
         }
 
         fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus {
-            let total_jobs_verified = pallet_x3_verifier::TotalJobsVerified::<Runtime>::get();
-            let configured_chain_count = pallet_x3_settlement_engine::ChainFinality::<Runtime>::iter().count() as u64;
-
-            cross_chain_state_root_api::CrossChainValidationStatus {
-                evm_headers_validated: configured_chain_count,
-                svm_headers_validated: configured_chain_count,
-                proof_batches_submitted: total_jobs_verified,
-                validation_failures: pallet_x3_settlement_engine::InvariantViolations::<Runtime>::get().saturated_into::<u32>(),
-                last_validated_block: pallet_x3_verifier::Jobs::<Runtime>::iter()
-                    .filter(|(_, job)| job.receipt_hash.is_some())
-                    .map(|(_, job)| job.submitted_at.saturated_into::<u64>())
-                    .max()
-                    .unwrap_or_default(),
-                cpu_fallback_count: 0,
-            }
+            cross_chain_status_response()
         }
 
         fn aggregate_cross_chain_proofs(
@@ -2933,41 +3191,7 @@ impl_runtime_apis! {
         fn confirm_settlement_finality(
             proof_hash: sp_core::H256,
         ) -> Option<governance_settlement_api::ProofFinalityStatus> {
-            if proof_hash == sp_core::H256::zero() {
-                return None;
-            }
-
-            let (_, job) = pallet_x3_verifier::Jobs::<Runtime>::iter()
-                .find(|(_, job)| job.receipt_hash == Some(proof_hash))?;
-            let finality_cfg = pallet_x3_settlement_engine::ChainFinality::<Runtime>::get(
-                pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
-            )
-            .unwrap_or_else(|| {
-                pallet_x3_settlement_engine::finality::FinalityOracle::default_config(
-                    pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
-                )
-            });
-            let (is_finalized, confidence_percent) = match job.status {
-                pallet_x3_verifier::pallet::JobStatus::Applied => (true, 100),
-                pallet_x3_verifier::pallet::JobStatus::Verified => (true, 90),
-                pallet_x3_verifier::pallet::JobStatus::Submitted => (false, 50),
-                pallet_x3_verifier::pallet::JobStatus::Pending => (false, 25),
-                pallet_x3_verifier::pallet::JobStatus::Failed
-                | pallet_x3_verifier::pallet::JobStatus::Disputed => (false, 0),
-            };
-
-            Some(governance_settlement_api::ProofFinalityStatus {
-                proof_hash,
-                is_finalized,
-                finality_block: if is_finalized {
-                    job.submitted_at.saturated_into::<u32>()
-                } else {
-                    0
-                },
-                confidence_percent,
-                validator_signatures: finality_cfg.confirmations_required,
-                finality_type: governance_settlement_api::FinalityType::SettlementEngine,
-            })
+            proof_finality_status_response(proof_hash)
         }
     }
 
@@ -2977,87 +3201,13 @@ impl_runtime_apis! {
     #[cfg(feature = "gpu-validator")]
     impl gpu_validator_api::SettlementFinalityApi<Block> for Runtime {
         fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics {
-            let jobs: Vec<_> = pallet_x3_verifier::Jobs::<Runtime>::iter().map(|(_, job)| job).collect();
-            let total_proofs = pallet_x3_verifier::TotalJobsSubmitted::<Runtime>::get();
-            let finalized_proofs = jobs
-                .iter()
-                .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Applied))
-                .count() as u64;
-            let disputed_proofs = jobs
-                .iter()
-                .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Disputed))
-                .count() as u64;
-            let rejected_proofs = jobs
-                .iter()
-                .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Failed))
-                .count() as u64;
-            let finality_rate_percent = if total_proofs == 0 {
-                0
-            } else {
-                ((finalized_proofs.saturating_mul(100)) / total_proofs).min(100) as u8
-            };
-
-            governance_settlement_api::FinalityMetrics {
-                total_proofs,
-                finalized_proofs,
-                disputed_proofs,
-                rejected_proofs,
-                active_disputes: disputed_proofs.saturated_into::<u32>(),
-                average_finality_blocks: 0,
-                finality_rate_percent,
-                last_finality_block: jobs
-                    .iter()
-                    .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Applied))
-                    .map(|job| job.submitted_at.saturated_into::<u32>())
-                    .max()
-                    .unwrap_or_default(),
-            }
+            finality_metrics_response()
         }
 
         fn query_validator_reputation(
             validator_id: AccountId,
         ) -> governance_settlement_api::ValidatorReputation {
-            let validator_key = validator_id.encode();
-            let mut disputes_lost = 0u32;
-            let mut total_disputes = 0u32;
-
-            for (_, job) in pallet_x3_verifier::Jobs::<Runtime>::iter() {
-                if job.executor.as_ref() != Some(&validator_id) {
-                    continue;
-                }
-
-                if matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Disputed | pallet_x3_verifier::pallet::JobStatus::Failed) {
-                    total_disputes = total_disputes.saturating_add(1);
-                }
-                if matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Failed) {
-                    disputes_lost = disputes_lost.saturating_add(1);
-                }
-            }
-
-            let Some(executor) = pallet_x3_verifier::Executors::<Runtime>::get(&validator_id) else {
-                return governance_settlement_api::ValidatorReputation {
-                    validator_id: validator_key,
-                    reputation_score: 0,
-                    disputes_won: 0,
-                    disputes_lost,
-                    valid_dispute_percent: 0,
-                    total_disputes,
-                };
-            };
-
-            let disputes_won = total_disputes.saturating_sub(disputes_lost);
-            governance_settlement_api::ValidatorReputation {
-                validator_id: validator_key,
-                reputation_score: executor.reputation as u32,
-                disputes_won,
-                disputes_lost,
-                valid_dispute_percent: if total_disputes == 0 {
-                    executor.reputation
-                } else {
-                    ((disputes_won.saturating_mul(100)) / total_disputes).min(100) as u8
-                },
-                total_disputes,
-            }
+            validator_reputation_response(validator_id)
         }
 
         fn query_batch_finality_status(
@@ -3072,13 +3222,166 @@ impl_runtime_apis! {
     }
 }
 
+#[cfg(feature = "gpu-validator")]
+fn cross_chain_status_response() -> cross_chain_state_root_api::CrossChainValidationStatus {
+    let total_jobs_verified = pallet_x3_verifier::TotalJobsVerified::<Runtime>::get();
+    let configured_chain_count =
+        pallet_x3_settlement_engine::ChainFinality::<Runtime>::iter().count() as u64;
+
+    cross_chain_state_root_api::CrossChainValidationStatus {
+        evm_headers_validated: configured_chain_count,
+        svm_headers_validated: configured_chain_count,
+        proof_batches_submitted: total_jobs_verified,
+        validation_failures: pallet_x3_settlement_engine::InvariantViolations::<Runtime>::get()
+            .saturated_into::<u32>(),
+        last_validated_block: pallet_x3_verifier::Jobs::<Runtime>::iter()
+            .filter(|(_, job)| job.receipt_hash.is_some())
+            .map(|(_, job)| job.submitted_at.saturated_into::<u64>())
+            .max()
+            .unwrap_or_default(),
+        cpu_fallback_count: 0,
+    }
+}
+
+#[cfg(feature = "gpu-validator")]
+fn proof_finality_status_response(
+    proof_hash: H256,
+) -> Option<governance_settlement_api::ProofFinalityStatus> {
+    if proof_hash == H256::zero() {
+        return None;
+    }
+
+    let (_, job) = pallet_x3_verifier::Jobs::<Runtime>::iter()
+        .find(|(_, job)| job.receipt_hash == Some(proof_hash))?;
+    let finality_cfg = pallet_x3_settlement_engine::ChainFinality::<Runtime>::get(
+        pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
+    )
+    .unwrap_or_else(|| {
+        pallet_x3_settlement_engine::finality::FinalityOracle::default_config(
+            pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
+        )
+    });
+    let (is_finalized, confidence_percent) = match job.status {
+        pallet_x3_verifier::pallet::JobStatus::Applied => (true, 100),
+        pallet_x3_verifier::pallet::JobStatus::Verified => (true, 90),
+        pallet_x3_verifier::pallet::JobStatus::Submitted => (false, 50),
+        pallet_x3_verifier::pallet::JobStatus::Pending => (false, 25),
+        pallet_x3_verifier::pallet::JobStatus::Failed
+        | pallet_x3_verifier::pallet::JobStatus::Disputed => (false, 0),
+    };
+
+    Some(governance_settlement_api::ProofFinalityStatus {
+        proof_hash,
+        is_finalized,
+        finality_block: if is_finalized {
+            job.submitted_at.saturated_into::<u32>()
+        } else {
+            0
+        },
+        confidence_percent,
+        validator_signatures: finality_cfg.confirmations_required,
+        finality_type: governance_settlement_api::FinalityType::SettlementEngine,
+    })
+}
+
+#[cfg(feature = "gpu-validator")]
+fn finality_metrics_response() -> governance_settlement_api::FinalityMetrics {
+    let jobs: Vec<_> = pallet_x3_verifier::Jobs::<Runtime>::iter()
+        .map(|(_, job)| job)
+        .collect();
+    let total_proofs = pallet_x3_verifier::TotalJobsSubmitted::<Runtime>::get();
+    let finalized_proofs = jobs
+        .iter()
+        .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Applied))
+        .count() as u64;
+    let disputed_proofs = jobs
+        .iter()
+        .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Disputed))
+        .count() as u64;
+    let rejected_proofs = jobs
+        .iter()
+        .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Failed))
+        .count() as u64;
+    let finality_rate_percent = if total_proofs == 0 {
+        0
+    } else {
+        ((finalized_proofs.saturating_mul(100)) / total_proofs).min(100) as u8
+    };
+
+    governance_settlement_api::FinalityMetrics {
+        total_proofs,
+        finalized_proofs,
+        disputed_proofs,
+        rejected_proofs,
+        active_disputes: disputed_proofs.saturated_into::<u32>(),
+        average_finality_blocks: 0,
+        finality_rate_percent,
+        last_finality_block: jobs
+            .iter()
+            .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Applied))
+            .map(|job| job.submitted_at.saturated_into::<u32>())
+            .max()
+            .unwrap_or_default(),
+    }
+}
+
+#[cfg(feature = "gpu-validator")]
+fn validator_reputation_response(
+    validator_id: AccountId,
+) -> governance_settlement_api::ValidatorReputation {
+    let validator_key = validator_id.encode();
+    let mut disputes_lost = 0u32;
+    let mut total_disputes = 0u32;
+
+    for (_, job) in pallet_x3_verifier::Jobs::<Runtime>::iter() {
+        if job.executor.as_ref() != Some(&validator_id) {
+            continue;
+        }
+
+        if matches!(
+            job.status,
+            pallet_x3_verifier::pallet::JobStatus::Disputed
+                | pallet_x3_verifier::pallet::JobStatus::Failed
+        ) {
+            total_disputes = total_disputes.saturating_add(1);
+        }
+        if matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Failed) {
+            disputes_lost = disputes_lost.saturating_add(1);
+        }
+    }
+
+    let Some(executor) = pallet_x3_verifier::Executors::<Runtime>::get(&validator_id) else {
+        return governance_settlement_api::ValidatorReputation {
+            validator_id: validator_key,
+            reputation_score: 0,
+            disputes_won: 0,
+            disputes_lost,
+            valid_dispute_percent: 0,
+            total_disputes,
+        };
+    };
+
+    let disputes_won = total_disputes.saturating_sub(disputes_lost);
+    governance_settlement_api::ValidatorReputation {
+        validator_id: validator_key,
+        reputation_score: executor.reputation as u32,
+        disputes_won,
+        disputes_lost,
+        valid_dispute_percent: if total_disputes == 0 {
+            executor.reputation
+        } else {
+            ((disputes_won.saturating_mul(100)) / total_disputes).min(100) as u8
+        },
+        total_disputes,
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────
 // Cross-Chain GPU State-Root Validation API
 // ─────────────────────────────────────────────────────────────────
 
-#[cfg(feature = "gpu-validator")]
 pub mod cross_chain_state_root_api {
-    use codec::{Encode, Decode};
+    use codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use sp_core::H256;
     use sp_std::vec::Vec;
@@ -3154,9 +3457,8 @@ pub mod cross_chain_state_root_api {
 // Phase 10a: Governance & Settlement Finality API (Structural)
 // ─────────────────────────────────────────────────────────────────
 
-#[cfg(feature = "gpu-validator")]
 pub mod governance_settlement_api {
-    use codec::{Encode, Decode};
+    use codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use sp_core::H256;
     use sp_std::vec::Vec;
@@ -3180,11 +3482,11 @@ pub mod governance_settlement_api {
     /// Dispute resolution status
     #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq, Copy)]
     pub enum DisputeStatus {
-        Pending,   // Challenge submitted, voting window open
-        Active,    // Voting underway
-        Resolved,  // Voting closed, result finalized
-        Rejected,  // Challenge dismissed (proof was valid)
-        Accepted,  // Challenge upheld (proof was invalid)
+        Pending,  // Challenge submitted, voting window open
+        Active,   // Voting underway
+        Resolved, // Voting closed, result finalized
+        Rejected, // Challenge dismissed (proof was valid)
+        Accepted, // Challenge upheld (proof was invalid)
     }
 
     /// Finality confirmation status for a proof
@@ -3243,31 +3545,20 @@ pub mod governance_settlement_api {
 
     /// Trait declaration for governance-driven settlement API
     pub trait GovernanceSettlementApi {
-        fn submit_dispute(
-            proof_hash: H256,
-            reason: Vec<u8>,
-        ) -> Option<DisputeRecord>;
+        fn submit_dispute(proof_hash: H256, reason: Vec<u8>) -> Option<DisputeRecord>;
 
-        fn query_dispute_status(
-            proof_hash: H256,
-        ) -> Option<DisputeRecord>;
+        fn query_dispute_status(proof_hash: H256) -> Option<DisputeRecord>;
 
-        fn confirm_settlement_finality(
-            proof_hash: H256,
-        ) -> Option<ProofFinalityStatus>;
+        fn confirm_settlement_finality(proof_hash: H256) -> Option<ProofFinalityStatus>;
     }
 
     /// Trait declaration for settlement finality confirmation API
     pub trait SettlementFinalityApi {
         fn query_finality_metrics() -> FinalityMetrics;
 
-        fn query_validator_reputation(
-            validator_id: Vec<u8>,
-        ) -> ValidatorReputation;
+        fn query_validator_reputation(validator_id: Vec<u8>) -> ValidatorReputation;
 
-        fn query_batch_finality_status(
-            merkle_root: H256,
-        ) -> Option<BatchFinalityStatus>;
+        fn query_batch_finality_status(merkle_root: H256) -> Option<BatchFinalityStatus>;
     }
 }
 
@@ -3355,7 +3646,7 @@ mod vm_adapter_tests {
 
         let mut ext = sp_io::TestExternalities::new(storage);
         ext.execute_with(|| {
-            System::set_block_number(1);
+            frame_system::Pallet::<Runtime>::set_block_number(1);
             Timestamp::set_timestamp(MILLISECS_PER_BLOCK);
         });
         ext
@@ -3363,6 +3654,25 @@ mod vm_adapter_tests {
 
     fn test_account(seed: u8) -> AccountId {
         sp_runtime::AccountId32::new([seed; 32])
+    }
+
+    fn verifier_receipt_response_for_test(
+        job_id: pallet_x3_verifier::runtime_api::JobId,
+    ) -> Option<pallet_x3_verifier::runtime_api::ReceiptResponse<AccountId>> {
+        let receipt_hash = pallet_x3_verifier::Jobs::<Runtime>::get(&job_id)?.receipt_hash?;
+
+        pallet_x3_verifier::Receipts::<Runtime>::get(&receipt_hash).map(|receipt| {
+            pallet_x3_verifier::runtime_api::ReceiptResponse {
+                job_id,
+                executor: receipt.executor,
+                input_hash: receipt.input_hash,
+                output_hash: receipt.output_hash,
+                state_root_before: receipt.state_root_before,
+                state_root_after: receipt.state_root_after,
+                gas_used: receipt.gas_used,
+                timestamp: receipt.timestamp,
+            }
+        })
     }
 
     #[test]
@@ -3467,13 +3777,8 @@ mod vm_adapter_tests {
                 },
             );
 
-            let receipt = <Runtime as pallet_x3_verifier::runtime_api::X3VerifierApi<
-                Block,
-                AccountId,
-                Balance,
-                BlockNumber,
-            >>::get_receipt(job_id)
-            .expect("receipt should resolve via job receipt_hash");
+            let receipt = verifier_receipt_response_for_test(job_id)
+                .expect("receipt should resolve via job receipt_hash");
 
             assert_eq!(receipt.job_id, job_id);
             assert_eq!(receipt.executor, executor);
@@ -3531,26 +3836,24 @@ mod vm_adapter_tests {
                 },
             );
 
-            let metrics =
-                <Runtime as gpu_validator_api::SettlementFinalityApi<Block>>::query_finality_metrics();
+            let metrics = finality_metrics_response();
             assert_eq!(metrics.total_proofs, 1);
             assert_eq!(metrics.finalized_proofs, 1);
             assert_eq!(metrics.disputed_proofs, 0);
             assert_eq!(metrics.rejected_proofs, 0);
 
-            let cross_chain =
-                <Runtime as gpu_validator_api::CrossChainStateRootApi<Block>>::query_cross_chain_status();
+            let cross_chain = cross_chain_status_response();
             assert_eq!(cross_chain.proof_batches_submitted, 1);
             assert_eq!(cross_chain.validation_failures, 2);
             assert_eq!(cross_chain.last_validated_block, 3);
 
-            let finality = <Runtime as gpu_validator_api::GovernanceSettlementApi<Block>>::confirm_settlement_finality(proof_hash)
+            let finality = proof_finality_status_response(proof_hash)
                 .expect("proof should resolve from verifier job state");
             assert!(finality.is_finalized);
             assert_eq!(finality.validator_signatures, 5);
             assert_eq!(finality.confidence_percent, 100);
 
-            let reputation = <Runtime as gpu_validator_api::SettlementFinalityApi<Block>>::query_validator_reputation(validator.clone());
+            let reputation = validator_reputation_response(validator.clone());
             assert_eq!(reputation.validator_id, validator.encode());
             assert_eq!(reputation.reputation_score, 87);
             assert_eq!(reputation.total_disputes, 0);

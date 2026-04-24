@@ -189,8 +189,9 @@ impl CrossVmCall {
         nonce: u64,
         deadline: u64,
     ) -> Result<Self, DispatchError> {
-        let bounded = CrossVmPayload::try_from(payload)
-            .map_err(|_| DispatchError::Other("CrossVmCall payload exceeds MAX_CROSS_VM_PAYLOAD"))?;
+        let bounded = CrossVmPayload::try_from(payload).map_err(|_| {
+            DispatchError::Other("CrossVmCall payload exceeds MAX_CROSS_VM_PAYLOAD")
+        })?;
         Ok(Self {
             version: CROSS_VM_CALL_VERSION,
             source,
@@ -327,15 +328,7 @@ mod tests {
     #[test]
     fn new_rejects_oversized_payload() {
         let oversized = vec![0u8; (MAX_CROSS_VM_PAYLOAD as usize) + 1];
-        let err = CrossVmCall::new(
-            VmId::X3Vm,
-            VmId::Evm,
-            [0; 4],
-            oversized,
-            1,
-            1,
-            1,
-        );
+        let err = CrossVmCall::new(VmId::X3Vm, VmId::Evm, [0; 4], oversized, 1, 1, 1);
         assert!(err.is_err(), "expected oversized-payload rejection");
     }
 
@@ -359,7 +352,10 @@ mod tests {
         let source = finalized_hash(0xAA);
         let h1 = call.call_hash(&source);
         let h2 = call.call_hash(&source);
-        assert_eq!(h1, h2, "call_hash must be deterministic for identical inputs");
+        assert_eq!(
+            h1, h2,
+            "call_hash must be deterministic for identical inputs"
+        );
     }
 
     #[test]
@@ -382,22 +378,38 @@ mod tests {
         // nonce
         let mut c = base.clone();
         c.nonce = 2;
-        assert_ne!(base_hash, c.call_hash(&source), "nonce change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "nonce change must change hash"
+        );
 
         // source VM
         let mut c = base.clone();
         c.source = VmId::Svm;
-        assert_ne!(base_hash, c.call_hash(&source), "source change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "source change must change hash"
+        );
 
         // target VM
         let mut c = base.clone();
         c.target = VmId::X3Vm;
-        assert_ne!(base_hash, c.call_hash(&source), "target change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "target change must change hash"
+        );
 
         // selector
         let mut c = base.clone();
         c.selector = [0, 0, 0, 0];
-        assert_ne!(base_hash, c.call_hash(&source), "selector change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "selector change must change hash"
+        );
 
         // payload
         let c = CrossVmCall::new(
@@ -410,22 +422,38 @@ mod tests {
             base.deadline,
         )
         .unwrap();
-        assert_ne!(base_hash, c.call_hash(&source), "payload change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "payload change must change hash"
+        );
 
         // gas_budget
         let mut c = base.clone();
         c.gas_budget = base.gas_budget + 1;
-        assert_ne!(base_hash, c.call_hash(&source), "gas_budget change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "gas_budget change must change hash"
+        );
 
         // deadline
         let mut c = base.clone();
         c.deadline = base.deadline + 1;
-        assert_ne!(base_hash, c.call_hash(&source), "deadline change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "deadline change must change hash"
+        );
 
         // version
         let mut c = base.clone();
         c.version = CROSS_VM_CALL_VERSION.wrapping_add(1);
-        assert_ne!(base_hash, c.call_hash(&source), "version change must change hash");
+        assert_ne!(
+            base_hash,
+            c.call_hash(&source),
+            "version change must change hash"
+        );
     }
 
     #[test]

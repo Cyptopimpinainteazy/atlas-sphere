@@ -63,8 +63,6 @@ mod tests {
         pub p95_latency_ms: f64,
         /// P99 latency (ms)
         pub p99_latency_ms: f64,
-        /// Peak memory usage (simulated, MB)
-        pub peak_memory_mb: u64,
         /// Detected bottleneck (if any)
         pub bottleneck: Option<String>,
     }
@@ -93,38 +91,12 @@ mod tests {
             }
         }
 
-        /// Simulate GPU work (mock SHA256 compute)
-        async fn simulate_gpu_task(&self, _task_id: u64) -> Result<Duration, String> {
-            let task_start = Instant::now();
-
-            // Simulate network latency if configured
-            if let Some(latency_ms) = self.config.network_latency_ms {
-                tokio::time::sleep(Duration::from_millis(latency_ms)).await;
-            }
-
-            // Simulate GPU compute (100µs - 1ms)
-            tokio::time::sleep(Duration::from_micros(500)).await;
-
-            // Inject GPU failures if enabled
-            if self.config.inject_gpu_failures {
-                // Fail every 1000th task
-                if _task_id % 1000 == 0 && _task_id > 0 {
-                    self.gpu_healthy.store(false, Ordering::Release);
-                    return Err("GPU compute error".to_string());
-                }
-            }
-
-            Ok(task_start.elapsed())
-        }
-
         /// Task submitter task
-        async fn submitter_task(&self, submitter_id: usize, barrier: Arc<Barrier>) {
+        async fn submitter_task(&self, _submitter_id: usize, barrier: Arc<Barrier>) {
             barrier.wait().await;
 
             let tasks_per_second = self.config.target_tps / self.config.num_submitters as u64;
             let task_interval = Duration::from_micros(1_000_000 / tasks_per_second.max(1));
-
-            let mut task_id = submitter_id as u64;
 
             while !self.stop_signal.load(Ordering::Acquire) {
                 let interval_start = Instant::now();
@@ -134,7 +106,6 @@ mod tests {
                     self.tasks_submitted.fetch_add(1, Ordering::Relaxed);
 
                     // Simulate task execution
-                    let task_id_copy = task_id;
                     let latencies = self.latencies.clone();
                     let gpu_healthy = self.gpu_healthy.clone();
                     let tasks_completed = self.tasks_completed.clone();
@@ -154,8 +125,6 @@ mod tests {
                             tasks_failed.fetch_add(1, Ordering::Relaxed);
                         }
                     });
-
-                    task_id += self.config.num_submitters as u64;
                 }
 
                 // Rate limiting: sleep to maintain target TPS
@@ -271,7 +240,6 @@ mod tests {
                 p50_latency_ms: p50,
                 p95_latency_ms: p95,
                 p99_latency_ms: p99,
-                peak_memory_mb: 0, // Placeholder for memory tracking
                 bottleneck,
             }
         }

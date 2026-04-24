@@ -220,7 +220,7 @@ impl EconomicEngine {
 }
 
 #[cfg(test)]
-mod tests {
+mod resource_accounting_tests {
     use super::*;
 
     #[test]

@@ -469,15 +469,15 @@ docs/PHASES/
 
 ### Immediate (This Session)
 
-- [ ] Create PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md (600 lines)
-- [ ] Create MAINNET_INCIDENT_RESPONSE.md (400 lines)
-- [ ] Create RPC_FAILOVER_PROCEDURES.md (300 lines)
+- [x] Create PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md (600 lines)
+- [x] Create MAINNET_INCIDENT_RESPONSE.md (400 lines)
+- [x] Create RPC_FAILOVER_PROCEDURES.md (300 lines)
 
 ### Short-term (Next 2 sessions)
 
-- [ ] Create VALIDATOR_OPERATIONS.md (300 lines)
-- [ ] Create MAINNET_PERFORMANCE_BASELINE.md (250 lines)
-- [ ] Create GPU_VALIDATOR_TROUBLESHOOTING.md (350 lines)
+- [x] Create VALIDATOR_OPERATIONS.md (300 lines)
+- [x] Create MAINNET_PERFORMANCE_BASELINE.md (250 lines)
+- [x] Create GPU_VALIDATOR_TROUBLESHOOTING.md (350 lines)
 
 ### Medium-term (Before Phase 13f)
 

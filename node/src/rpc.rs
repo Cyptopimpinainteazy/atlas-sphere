@@ -17,8 +17,8 @@ use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{System, SystemApiServer};
 use x3_atomic_trade::{
-    billing::{calculate_trade_fee, BillingAccount, BillingMiddleware, BillingPlan},
-    AMMPool, SwapRPCServer, TokenPair,
+    billing::{calculate_trade_fee, BillingMiddleware},
+    SwapRPCServer, TokenPair,
 };
 use x3_chain_runtime::{opaque::Block, AccountId, AssetId, Balance, Nonce};
 use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
@@ -76,6 +76,52 @@ fn parse_u128_value(
     )))
 }
 
+/// Runtime API bounds required by the node RPC surface.
+#[cfg(feature = "gpu-validator")]
+pub trait NodeRuntimeApiCollection:
+    substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+    + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
+    + BlockBuilder<Block>
+    + pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>
+    + x3_chain_runtime::gpu_validator_api::GpuValidatorRuntimeApi<Block>
+    + x3_chain_runtime::gpu_validator_api::CrossChainStateRootApi<Block>
+    + x3_chain_runtime::gpu_validator_api::GovernanceSettlementApi<Block>
+    + x3_chain_runtime::gpu_validator_api::SettlementFinalityApi<Block>
+{
+}
+
+#[cfg(feature = "gpu-validator")]
+impl<T> NodeRuntimeApiCollection for T where
+    T: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+        + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
+        + BlockBuilder<Block>
+        + pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>
+        + x3_chain_runtime::gpu_validator_api::GpuValidatorRuntimeApi<Block>
+        + x3_chain_runtime::gpu_validator_api::CrossChainStateRootApi<Block>
+        + x3_chain_runtime::gpu_validator_api::GovernanceSettlementApi<Block>
+        + x3_chain_runtime::gpu_validator_api::SettlementFinalityApi<Block>
+{
+}
+
+/// Runtime API bounds required by the node RPC surface.
+#[cfg(not(feature = "gpu-validator"))]
+pub trait NodeRuntimeApiCollection:
+    substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+    + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
+    + BlockBuilder<Block>
+    + pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>
+{
+}
+
+#[cfg(not(feature = "gpu-validator"))]
+impl<T> NodeRuntimeApiCollection for T where
+    T: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+        + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
+        + BlockBuilder<Block>
+        + pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>
+{
+}
+
 /// Build the full RPC module exposed by the node.
 pub fn create_full<C, P>(
     client: Arc<C>,
@@ -92,10 +138,7 @@ where
         + Send
         + Sync
         + 'static,
-    C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
-        + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
-        + BlockBuilder<Block>
-        + pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
+    C::Api: NodeRuntimeApiCollection,
     P: TransactionPool + Sync + Send + 'static,
 {
     let mut module = RpcModule::new(());
@@ -179,32 +222,34 @@ where
     // ════════════════════════════════════════════════════════════════════════════════════
     // Phase 9: Cross-Chain Header Validation RPC Methods
     // ════════════════════════════════════════════════════════════════════════════════════
+    #[cfg(feature = "gpu-validator")]
     {
         let c = client.clone();
-        
+
         // validate_evmHeader: Validate EVM block header and return proof
         module.register_method("validate_evmHeader", move |params, _| {
-            let (block_number, block_hash_str, state_root_str): (u64, String, String) = params.parse()?;
-            
+            let (block_number, block_hash_str, state_root_str): (u64, String, String) =
+                params.parse()?;
+
             // Parse 0x-prefixed hex strings to H256
             let block_hash_str = block_hash_str.strip_prefix("0x").unwrap_or(&block_hash_str);
             let state_root_str = state_root_str.strip_prefix("0x").unwrap_or(&state_root_str);
-            
-            let block_hash_bytes = hex::decode(block_hash_str)
-                .map_err(|_| custom_error("Invalid block_hash hex"))?;
-            let state_root_bytes = hex::decode(state_root_str)
-                .map_err(|_| custom_error("Invalid state_root hex"))?;
-            
+
+            let block_hash_bytes =
+                hex::decode(block_hash_str).map_err(|_| custom_error("Invalid block_hash hex"))?;
+            let state_root_bytes =
+                hex::decode(state_root_str).map_err(|_| custom_error("Invalid state_root hex"))?;
+
             if block_hash_bytes.len() != 32 || state_root_bytes.len() != 32 {
                 return Err(custom_error("Hash must be 32 bytes"));
             }
-            
+
             let block_hash = sp_core::H256::from_slice(&block_hash_bytes);
             let state_root = sp_core::H256::from_slice(&state_root_bytes);
-            
+
             let runtime_api = c.runtime_api();
             let best_hash = c.info().best_hash;
-            
+
             if let Some(proof) = runtime_api
                 .validate_evm_header(best_hash, block_number, block_hash, state_root)
                 .ok()
@@ -225,29 +270,29 @@ where
                 }))
             }
         })?;
-        
+
         // validate_svmHeader: Validate SVM (Solana) block header
         module.register_method("validate_svmHeader", move |params, _| {
             let (slot, block_hash_str, state_root_str): (u64, String, String) = params.parse()?;
-            
+
             let block_hash_str = block_hash_str.strip_prefix("0x").unwrap_or(&block_hash_str);
             let state_root_str = state_root_str.strip_prefix("0x").unwrap_or(&state_root_str);
-            
-            let block_hash_bytes = hex::decode(block_hash_str)
-                .map_err(|_| custom_error("Invalid block_hash hex"))?;
-            let state_root_bytes = hex::decode(state_root_str)
-                .map_err(|_| custom_error("Invalid state_root hex"))?;
-            
+
+            let block_hash_bytes =
+                hex::decode(block_hash_str).map_err(|_| custom_error("Invalid block_hash hex"))?;
+            let state_root_bytes =
+                hex::decode(state_root_str).map_err(|_| custom_error("Invalid state_root hex"))?;
+
             if block_hash_bytes.len() != 32 || state_root_bytes.len() != 32 {
                 return Err(custom_error("Hash must be 32 bytes"));
             }
-            
+
             let block_hash = sp_core::H256::from_slice(&block_hash_bytes);
             let state_root = sp_core::H256::from_slice(&state_root_bytes);
-            
+
             let runtime_api = c.runtime_api();
             let best_hash = c.info().best_hash;
-            
+
             if let Some(proof) = runtime_api
                 .validate_svm_header(best_hash, slot, block_hash, state_root)
                 .ok()
@@ -268,17 +313,17 @@ where
                 }))
             }
         })?;
-        
+
         // query_crossChainStatus: Get cross-chain validation statistics
         module.register_method("query_crossChainStatus", move |_params, _| {
             let runtime_api = c.runtime_api();
             let best_hash = c.info().best_hash;
-            
+
             let status = runtime_api
                 .query_cross_chain_status(best_hash)
                 .ok()
                 .unwrap_or_default();
-            
+
             Ok(serde_json::json!({
                 "evm_headers_validated": status.evm_headers_validated,
                 "svm_headers_validated": status.svm_headers_validated,
@@ -290,14 +335,14 @@ where
         })?;
 
         // ==================== PHASE 10a: GOVERNANCE & SETTLEMENT FINALITY ====================
-        
+
         // submitDispute: Submit a new dispute for proof validation
         // Parameters: proof_hash (H256 as "0x..."), reason (String)
         // Returns: dispute_id, proof_hash, status, created_at_block, resolve_at_block, voting_blocks_remaining
         let c_dispute = c.clone();
         module.register_method("submitDispute", move |params, _| {
             let (proof_hash_str, reason_str): (String, String) = params.parse()?;
-            
+
             // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
             let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
             let proof_hash_bytes = hex::decode(proof_hash_str)
@@ -306,10 +351,10 @@ where
                 return Err(custom_error("proof_hash must be exactly 32 bytes"));
             }
             let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
-            
+
             let runtime_api = c_dispute.runtime_api();
             let best_hash = c_dispute.info().best_hash;
-            
+
             // Call governance settlement API
             if let Some(record) = runtime_api
                 .submit_dispute(best_hash, proof_hash, reason_str.into_bytes())
@@ -335,7 +380,7 @@ where
         let c_query_dispute = c.clone();
         module.register_method("queryDisputeStatus", move |params, _| {
             let proof_hash_str: String = params.parse()?;
-            
+
             // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
             let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
             let proof_hash_bytes = hex::decode(proof_hash_str)
@@ -344,10 +389,10 @@ where
                 return Err(custom_error("proof_hash must be exactly 32 bytes"));
             }
             let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
-            
+
             let runtime_api = c_query_dispute.runtime_api();
             let best_hash = c_query_dispute.info().best_hash;
-            
+
             // Call governance settlement API
             if let Some(record) = runtime_api
                 .query_dispute_status(best_hash, proof_hash)
@@ -376,7 +421,7 @@ where
         let c_finality = c.clone();
         module.register_method("queryProofFinality", move |params, _| {
             let proof_hash_str: String = params.parse()?;
-            
+
             // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
             let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
             let proof_hash_bytes = hex::decode(proof_hash_str)
@@ -385,10 +430,10 @@ where
                 return Err(custom_error("proof_hash must be exactly 32 bytes"));
             }
             let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
-            
+
             let runtime_api = c_finality.runtime_api();
             let best_hash = c_finality.info().best_hash;
-            
+
             // Call governance settlement API
             if let Some(finality) = runtime_api
                 .confirm_settlement_finality(best_hash, proof_hash)
@@ -413,13 +458,13 @@ where
         let c_challenge = c.clone();
         module.register_method("requestProofChallenge", move |params, _| {
             let (proof_hash_str, challenge_type_str): (String, String) = params.parse()?;
-            
+
             // Validate challenge_type
             match challenge_type_str.as_str() {
                 "merkle" | "signature" | "state_root" | "fraud_proof" => {},
                 _ => return Err(custom_error("Invalid challenge_type. Must be: merkle, signature, state_root, or fraud_proof")),
             }
-            
+
             // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
             let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
             let proof_hash_bytes = hex::decode(proof_hash_str)
@@ -428,26 +473,45 @@ where
                 return Err(custom_error("proof_hash must be exactly 32 bytes"));
             }
             let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
-            
+
             let runtime_api = c_challenge.runtime_api();
             let best_hash = c_challenge.info().best_hash;
-            let current_block = c_challenge.info().best_number;
-            
-            // Phase 10a: Structural validation only - defer crypto challenge execution to Phase 10b
-            // TODO(Phase 10b): Validate challenge_type matches proof structure
-            // TODO(Phase 10b): Execute merkle bisection, signature verification, or fraud proof challenge
-            // TODO(Phase 10b): Store challenge in pallet_governance for voting integration
-            
-            // For now, return structural challenge response with 24-hour verification window
-            Ok(serde_json::json!({
-                "challenge_id": format!("0x{}", hex::encode(proof_hash.as_bytes())),
-                "challenge_type": challenge_type_str,
-                "proof_hash": format!("0x{}", hex::encode(proof_hash.as_bytes())),
-                "created_at_block": current_block,
-                "verification_blocks": 432_000u64,  // 24-hour window
-                "verification_deadline_block": current_block + 432_000u64,
-                "confidence": 100,
-            }))
+
+            // Refuse challenges once the proof has reached finality.
+            if let Some(finality) = runtime_api
+                .confirm_settlement_finality(best_hash, proof_hash)
+                .ok()
+                .flatten()
+            {
+                if finality.is_finalized {
+                    return Err(custom_error(
+                        "Challenge rejected: proof is already finalized",
+                    ));
+                }
+            }
+
+            let reason = format!("challenge:{challenge_type_str}").into_bytes();
+
+            if let Some(record) = runtime_api
+                .submit_dispute(best_hash, proof_hash, reason)
+                .ok()
+                .flatten()
+            {
+                Ok(serde_json::json!({
+                    "challenge_id": format!("0x{}", hex::encode(record.dispute_id.as_bytes())),
+                    "challenge_type": challenge_type_str,
+                    "dispute_id": format!("0x{}", hex::encode(record.dispute_id.as_bytes())),
+                    "proof_hash": format!("0x{}", hex::encode(record.proof_hash.as_bytes())),
+                    "created_at_block": record.created_at_block,
+                    "resolve_at_block": record.resolve_at_block,
+                    "verification_blocks": record.resolve_at_block.saturating_sub(record.created_at_block),
+                    "votes_yes": record.votes_yes,
+                    "votes_no": record.votes_no,
+                    "votes_abstain": record.votes_abstain,
+                }))
+            } else {
+                Err(custom_error("Challenge submission failed - invalid proof_hash"))
+            }
         })?;
 
         // ==================== END PHASE 10a RPC METHODS ====================
@@ -468,23 +532,26 @@ where
     let cross_vm_bridge = Arc::new(Mutex::new(CrossVmBridge::new()));
 
     // Register default testnet billing accounts
-    #[cfg(any(feature = "dev", test))]
+    #[cfg(test)]
     {
         let mut billing_guard = billing
             .lock()
             .map_err(|_| custom_error("Billing lock poisoned"))?;
         // Testnet: register free-tier account for testing
-        let default_account = BillingAccount::new([0u8; 32], BillingPlan::Free);
+        let default_account = x3_atomic_trade::billing::BillingAccount::new(
+            [0u8; 32],
+            x3_atomic_trade::billing::BillingPlan::Free,
+        );
         billing_guard.register_account("testnet-default".to_string(), default_account);
     }
 
-    #[cfg(any(feature = "dev", test))]
+    #[cfg(test)]
     {
         let mut engine = swap_rpc
             .lock()
             .map_err(|_| custom_error("Swap engine lock poisoned"))?;
 
-        let _ = engine.register_pool(AMMPool {
+        let _ = engine.register_pool(x3_atomic_trade::AMMPool {
             id: "default_x3_usdc".to_string(),
             token_a: "X3".to_string(),
             token_b: "USDC".to_string(),
@@ -567,7 +634,6 @@ where
         Ok(format!("0x{:x}", bal))
     })?;
 
-    let c = client.clone();
     let check = check_rate_limit.clone();
     module.register_method("x3_estimateGas", move |params, _| {
         check("x3_estimateGas")?;
@@ -578,37 +644,21 @@ where
             .and_then(|v| v.as_str())
             .unwrap_or("0x0000000000000000000000000000000000000000");
         let data_hex = body.get("data").and_then(|v| v.as_str()).unwrap_or("0x");
-        let gas_limit = body
+        let _gas_limit = body
             .get("gas")
             .and_then(|v| v.as_u64())
             .unwrap_or(30_000_000);
         let caller_hex = body.get("from").and_then(|v| v.as_str());
 
-        let to_bytes = decode_hex_param(to_hex, "to")?;
+        let _to_bytes = decode_hex_param(to_hex, "to")?;
         let data_bytes = decode_hex_param(data_hex, "data")?;
-        let caller_bytes = caller_hex
+        let _caller_bytes = caller_hex
             .map(|h| decode_hex_param(h, "from"))
             .transpose()?;
 
-        let api = c.runtime_api();
-        let at = c.info().best_hash;
-
-        // Use runtime API for accurate gas estimation
-        let estimated_gas = api
-            .estimate_evm_gas(
-                at,
-                caller_bytes,
-                to_bytes.clone(),
-                data_bytes.clone(),
-                gas_limit,
-            )
-            .map_err(|e| custom_error(format!("Runtime error: {e:?}")))?
-            .map_err(|e| {
-                custom_error(format!(
-                    "Gas estimation failed: {}",
-                    String::from_utf8_lossy(&e)
-                ))
-            })?;
+        // Fallback gas estimation: base 21000 + 16 per byte of calldata
+        let calldata_cost = (data_bytes.len() as u64).saturating_mul(16);
+        let estimated_gas = 21_000u64.saturating_add(calldata_cost);
 
         // Add 25% safety margin for execution variability
         let safe_gas = (estimated_gas as f64 * 1.25) as u64;
@@ -624,11 +674,11 @@ where
         Ok(format!("0x{:x}", safe_gas))
     })?;
 
-    let c = client.clone();
     let check = check_rate_limit.clone();
     let billing_check = billing.clone();
     let bridge_queue = cross_vm_bridge.clone();
     let pool_for_bundle = tx_pool.clone();
+    let c = client.clone();
     module.register_method("x3_submitCrossVmTransaction", move |params, _| {
         check("x3_submitCrossVmTransaction")?;
         let body: serde_json::Value = params.one()?;
@@ -722,7 +772,6 @@ where
         // is logged if the pool rejects it (e.g. missing keystore signing on
         // this testnet build — wire keystore via sc_keystore for production).
         {
-            use parity_scale_codec::Encode;
             let evm_hash_for_bundle = evm_tx_hash.clone();
             let pool_ref = pool_for_bundle.clone();
             tokio::spawn(async move {
@@ -730,7 +779,7 @@ where
                 // Version byte 0x04 = v4 unsigned (no signatory).
                 // Raw bytes: [0x04] ++ SCALE(RuntimeCall::X3AtomicKernel { ... })
                 // then outer SCALE Vec<u8> prefix so OpaqueExtrinsic can be decoded.
-                let mut inner = vec![0x04u8]; // unsigned v4
+                let inner = vec![0x04u8]; // unsigned v4
                 // Encode the call manually: pallet_call_index bytes are injected at
                 // submit time by SCALE via the construct_runtime discriminant.
                 // For now log the initiation; a signed variant requires keystore.
@@ -800,7 +849,6 @@ where
     })?;
 
     // SVM-only submission RPC method
-    let c = client.clone();
     let check = check_rate_limit.clone();
     let billing_check = billing.clone();
     let bridge_queue = cross_vm_bridge.clone();

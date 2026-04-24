@@ -63,6 +63,12 @@ pallet-private-execution = { path = "../pallets/private-execution", default-feat
 pallet-x3-sequencer = { path = "../pallets/x3-sequencer", default-features = false }
 pallet-x3-da = { path = "../pallets/x3-da", default-features = false }
 pallet-x3-atomic-kernel = { path = "../pallets/x3-atomic-kernel", default-features = false }
+# Universal Asset Kernel MVP — internal cross-VM transfer stack (X3Native / X3Evm / X3Svm).
+x3-asset-kernel-types = { path = "../crates/x3-asset-kernel-types", default-features = false }
+pallet-x3-asset-registry = { path = "../pallets/x3-asset-registry", default-features = false }
+pallet-x3-supply-ledger = { path = "../pallets/x3-supply-ledger", default-features = false }
+pallet-x3-cross-vm-router = { path = "../pallets/x3-cross-vm-router", default-features = false }
+pallet-x3-token-factory = { path = "../pallets/x3-token-factory", default-features = false }
 x3-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
@@ -138,6 +144,11 @@ std = [
 	"pallet-x3-sequencer/std",
 	"pallet-x3-da/std",
 	"pallet-x3-atomic-kernel/std",
+	"x3-asset-kernel-types/std",
+	"pallet-x3-asset-registry/std",
+	"pallet-x3-supply-ledger/std",
+	"pallet-x3-cross-vm-router/std",
+	"pallet-x3-token-factory/std",
 	"x3-svm-integration/std",
 	"sp-api/std",
 	"sp-block-builder/std",

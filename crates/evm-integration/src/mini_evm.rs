@@ -224,7 +224,7 @@ fn addr(n: u8) -> H160 {
 
 /// Gas cost helper: base + per-word cost.
 fn word_gas(input_len: usize, base: u64, per_word: u64) -> u64 {
-    let words = (input_len as u64 + 31) / 32;
+    let words = (input_len as u64).div_ceil(32);
     base + words * per_word
 }
 
@@ -484,9 +484,9 @@ fn precompile_blake2f(
 
     // Parse state vector h (8 x u64 LE)
     let mut h = [0u64; 8];
-    for i in 0..8 {
+    for (i, value) in h.iter_mut().enumerate() {
         let offset = 4 + i * 8;
-        h[i] = u64::from_le_bytes([
+        *value = u64::from_le_bytes([
             input[offset],
             input[offset + 1],
             input[offset + 2],
@@ -500,9 +500,9 @@ fn precompile_blake2f(
 
     // Parse message block m (16 x u64 LE)
     let mut m = [0u64; 16];
-    for i in 0..16 {
+    for (i, value) in m.iter_mut().enumerate() {
         let offset = 68 + i * 8;
-        m[i] = u64::from_le_bytes([
+        *value = u64::from_le_bytes([
             input[offset],
             input[offset + 1],
             input[offset + 2],

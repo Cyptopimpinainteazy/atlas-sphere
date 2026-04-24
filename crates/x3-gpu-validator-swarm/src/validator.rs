@@ -371,9 +371,10 @@ mod tests {
         // Verify proof was submitted and is in Collecting state
         // (In real scenario, multiple attestations would be added to reach finality)
         let stats = locked_aggregator.get_stats();
-        // Proof aggregator has been initialized with at least 0 proofs
-        assert_eq!(stats.total_proofs, stats.total_proofs);
-        // May be 0 or 1 depending on timing
+        assert_eq!(
+            stats.collecting + stats.finalized + stats.byzantine_finalized + stats.failed,
+            stats.total_proofs
+        );
 
         // The workflow is: ExecutionResult → GpuReceipt → UnifiedProof → ProofAggregator
     }
@@ -403,8 +404,10 @@ mod tests {
 
         // Check that a unified proof was generated
         let stats = locked_aggregator.get_stats();
-        // Stats should show proof generation was attempted
-        assert!(stats.total_proofs >= 0);
+        assert_eq!(
+            stats.collecting + stats.finalized + stats.byzantine_finalized + stats.failed,
+            stats.total_proofs
+        );
 
         // The workflow demonstrates: ExecutionResult → MerkleProof generation → UnifiedProof with merkle_proof field
     }

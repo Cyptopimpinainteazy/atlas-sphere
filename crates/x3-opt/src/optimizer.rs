@@ -3,13 +3,12 @@
 use crate::loop_pack_v1::LoopPackV1Pass;
 use crate::pass::{BoxedPass, Pass};
 use crate::passes::{
-    block_fusion::BlockFusionPass, branch_opt::BranchOptPass,
-    cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
-    copy_propagation::CopyPropagationPass, dead_code_elimination::DeadCodeEliminationPass,
-    dom_const_prop::DomConstPropPass, edge_const_prop::EdgeConstPropPass,
-    expression_hoist::ExpressionHoistPass, global_const_prop::GlobalConstPropPass,
-    peephole::PeepholePass, pre::PrePass as PartialRedundancyEliminationPass,
-    speculative_hoist::SpeculativeHoistPass,
+    block_fusion::BlockFusionPass, branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass,
+    constant_fold::ConstantFoldPass, copy_propagation::CopyPropagationPass,
+    dead_code_elimination::DeadCodeEliminationPass, dom_const_prop::DomConstPropPass,
+    edge_const_prop::EdgeConstPropPass, expression_hoist::ExpressionHoistPass,
+    global_const_prop::GlobalConstPropPass, peephole::PeepholePass,
+    pre::PrePass as PartialRedundancyEliminationPass, speculative_hoist::SpeculativeHoistPass,
 };
 use crate::OptResult;
 use x3_mir::MirModule;
@@ -68,7 +67,7 @@ pub fn default_passes() -> Vec<BoxedPass> {
         Box::new(EdgeConstPropPass::new()),
         Box::new(ConditionalFoldPass::new()),
         Box::new(PartialRedundancyEliminationPass::new()),
-        Box::new(ExpressionHoistPass::new()),  // Expression hoisting (Phase 3)
+        Box::new(ExpressionHoistPass::new()), // Expression hoisting (Phase 3)
         Box::new(GlobalConstPropPass),
         Box::new(BranchOptPass),
         Box::new(BlockFusionPass),

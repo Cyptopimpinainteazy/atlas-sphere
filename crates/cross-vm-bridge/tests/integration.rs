@@ -39,7 +39,9 @@ fn integration_execute_transfers_and_atomic_swap() {
     assert_eq!(bridge.pending_count(), 3);
 
     let dispatcher = NoOpDispatcher::testnet();
-    let results = bridge.execute_pending_with_dispatcher(&dispatcher).expect("execute pending");
+    let results = bridge
+        .execute_pending_with_dispatcher(&dispatcher)
+        .expect("execute pending");
 
     // all operations executed and succeeded
     assert_eq!(results.len(), 3);

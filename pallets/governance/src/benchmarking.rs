@@ -1,20 +1,32 @@
 //! Benchmarks for pallet-governance.
 
-#![cfg(feature = "runtime-benchmarks")]
-
 use super::*;
 use frame_benchmarking::v2::*;
-use frame_support::BoundedVec;
+use frame_support::{
+    pallet_prelude::ConstU32,
+    traits::{Currency, Get},
+    BoundedVec,
+};
 use frame_system::RawOrigin;
 
 #[benchmarks]
 mod benchmarks {
     use super::*;
 
+    fn benchmark_call<T: Config>() -> <T as Config>::RuntimeCall {
+        crate::Call::<T>::update_config {
+            new_quorum: None,
+            new_threshold: None,
+            new_voting_period: None,
+            new_enactment_period: None,
+        }
+        .into()
+    }
+
     #[benchmark]
     fn submit_proposal() {
         let caller: T::AccountId = whitelisted_caller();
-        let call = frame_system::Call::<T>::remark { remark: vec![] }.into();
+        let call = benchmark_call::<T>();
         let title: BoundedVec<u8, ConstU32<256>> = vec![0u8; 256].try_into().unwrap();
         let description: BoundedVec<u8, ConstU32<4096>> = vec![0u8; 4096].try_into().unwrap();
 
@@ -28,6 +40,9 @@ mod benchmarks {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         );
 
         assert_eq!(Pallet::<T>::proposal_count(), 1);
@@ -39,7 +54,7 @@ mod benchmarks {
         let voter: T::AccountId = account("voter", 0, 0);
 
         // Setup proposal
-        let call = frame_system::Call::<T>::remark { remark: vec![] }.into();
+        let call = benchmark_call::<T>();
         let title: BoundedVec<u8, ConstU32<256>> = b"Test".to_vec().try_into().unwrap();
         let description: BoundedVec<u8, ConstU32<4096>> = b"Test".to_vec().try_into().unwrap();
 
@@ -52,6 +67,9 @@ mod benchmarks {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         )
         .unwrap();
 
@@ -112,7 +130,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
 
         // Setup proposal
-        let call = frame_system::Call::<T>::remark { remark: vec![] }.into();
+        let call = benchmark_call::<T>();
         let title: BoundedVec<u8, ConstU32<256>> = b"Test".to_vec().try_into().unwrap();
         let description: BoundedVec<u8, ConstU32<4096>> = b"Test".to_vec().try_into().unwrap();
 
@@ -124,6 +142,9 @@ mod benchmarks {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         )
         .unwrap();
 
@@ -136,7 +157,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
 
         // Setup proposal
-        let call = frame_system::Call::<T>::remark { remark: vec![] }.into();
+        let call = benchmark_call::<T>();
         let title: BoundedVec<u8, ConstU32<256>> = b"Test".to_vec().try_into().unwrap();
         let description: BoundedVec<u8, ConstU32<4096>> = b"Test".to_vec().try_into().unwrap();
 
@@ -148,6 +169,9 @@ mod benchmarks {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         )
         .unwrap();
 
@@ -163,7 +187,7 @@ mod benchmarks {
         let voter: T::AccountId = account("voter", 0, 0);
 
         // Setup proposal
-        let call = frame_system::Call::<T>::remark { remark: vec![] }.into();
+        let call = benchmark_call::<T>();
         let title: BoundedVec<u8, ConstU32<256>> = b"Test".to_vec().try_into().unwrap();
         let description: BoundedVec<u8, ConstU32<4096>> = b"Test".to_vec().try_into().unwrap();
 
@@ -176,6 +200,9 @@ mod benchmarks {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         )
         .unwrap();
 
@@ -204,7 +231,7 @@ mod benchmarks {
         T::Currency::make_free_balance_be(&caller, T::ProposalDeposit::get() * 10u32.into());
 
         #[extrinsic_call]
-        _(RawOrigin::Signed(caller.clone()), caller);
+        _(RawOrigin::Signed(caller.clone()), caller.clone());
     }
 
     #[benchmark]

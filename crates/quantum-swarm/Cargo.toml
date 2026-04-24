@@ -63,9 +63,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # HTTP client for external QPU APIs
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], optional = true }
 
-# Workspace dependencies
-gpu-swarm = { path = "../gpu-swarm" }
-
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = { version = "0.5", features = ["html_reports"] }

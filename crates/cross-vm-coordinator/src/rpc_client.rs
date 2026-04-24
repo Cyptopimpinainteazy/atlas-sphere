@@ -125,9 +125,10 @@ impl RpcClient {
         .map_err(|_| CoordinatorError::Internal("RPC request timeout (30s exceeded)".into()))?
         .map_err(|e| CoordinatorError::Internal(format!("RPC network error: {e}")))?;
 
-        let response_body = response.text().await.map_err(|e| {
-            CoordinatorError::Internal(format!("Failed to read RPC response: {e}"))
-        })?;
+        let response_body = response
+            .text()
+            .await
+            .map_err(|e| CoordinatorError::Internal(format!("Failed to read RPC response: {e}")))?;
 
         let response: JsonRpcResponse = serde_json::from_str(&response_body).map_err(|e| {
             CoordinatorError::Internal(format!("Failed to parse RPC response: {e}"))

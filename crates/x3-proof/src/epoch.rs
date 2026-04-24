@@ -226,7 +226,7 @@ impl EpochProof {
         // Iterative binary Merkle tree reduction
         let mut layer: Vec<Hash256> = commitments.to_vec();
         while layer.len() > 1 {
-            let mut next = Vec::with_capacity((layer.len() + 1) / 2);
+            let mut next = Vec::with_capacity(layer.len().div_ceil(2));
             let mut i = 0;
             while i < layer.len() {
                 if i + 1 < layer.len() {
@@ -328,12 +328,16 @@ impl EpochProof {
         let mut pos = idx;
 
         while layer.len() > 1 {
-            let sibling_pos = if pos % 2 == 0 { pos + 1 } else { pos - 1 };
+            let sibling_pos = if pos.is_multiple_of(2) {
+                pos + 1
+            } else {
+                pos - 1
+            };
             if sibling_pos < layer.len() {
                 siblings.push(layer[sibling_pos]);
             }
 
-            let mut next = Vec::with_capacity((layer.len() + 1) / 2);
+            let mut next = Vec::with_capacity(layer.len().div_ceil(2));
             let mut i = 0;
             while i < layer.len() {
                 if i + 1 < layer.len() {

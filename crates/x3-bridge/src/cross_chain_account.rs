@@ -570,8 +570,7 @@ mod tests {
             let message_hash = [3u8; 32];
             let sr_sig = pair.sign(&message_hash);
 
-            let mut account =
-                CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
+            let mut account = CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
             // Override account_id so the signer-association check matches the sr25519 pubkey.
             account.account_id = sr_pubkey.0;
 

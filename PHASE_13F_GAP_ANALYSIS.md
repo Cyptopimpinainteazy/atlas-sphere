@@ -216,9 +216,11 @@ Based on this analysis, here's what would UNBLOCK Phase 13f execution:
 **Total to Unblock Phase 13f:** ~1,300 lines, 5-8 hours
 
 ### Should Create (High Priority, Before Production)
-- [ ] VALIDATOR_OPERATIONS.md
-- [ ] MAINNET_PERFORMANCE_BASELINE.md
-- [ ] GPU_VALIDATOR_TROUBLESHOOTING.md
+- [x] VALIDATOR_OPERATIONS.md
+- [x] MAINNET_PERFORMANCE_BASELINE.md
+- [x] GPU_VALIDATOR_TROUBLESHOOTING.md
+
+Verification note (2026-04-21): these docs are present in `crates/relayer/`.
 
 **Total for complete Phase 13f suite:** ~1,900 lines, 8-11 hours
 
@@ -236,14 +238,14 @@ Based on this analysis, here's what would UNBLOCK Phase 13f execution:
 - [x] Monitoring setup (Prometheus/Grafana strategy defined)
 
 ### Missing Docs Blocking Confidence ❌
-- [ ] Hour-by-hour launch guide (T-48h to T+24h)
-- [ ] Comprehensive incident playbooks (8+ scenarios)
-- [ ] RPC failover procedures (detailed)
+- [x] Hour-by-hour launch guide (T-48h to T+24h)
+- [x] Comprehensive incident playbooks (8+ scenarios)
+- [x] RPC failover procedures (detailed)
 
 ### Missing Docs Needed Soon ⚠️
-- [ ] Validator operations guide
-- [ ] Performance baseline expectations
-- [ ] GPU troubleshooting procedures
+- [x] Validator operations guide
+- [x] Performance baseline expectations
+- [x] GPU troubleshooting procedures
 
 ---
 

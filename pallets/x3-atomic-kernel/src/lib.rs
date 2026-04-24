@@ -716,8 +716,7 @@ pub mod pallet {
                     let now = <frame_system::Pallet<T>>::block_number();
                     ensure!(now > record.deadline_block, Error::<T>::InvalidBundleState);
                     ensure!(
-                        caller == record.submitter
-                            || record.executor == Some(caller.clone()),
+                        caller == record.submitter || record.executor == Some(caller.clone()),
                         Error::<T>::NotBundleSubmitter
                     );
                 }

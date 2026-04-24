@@ -60,7 +60,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if denominator == 0.0 {
             "N/A".to_string()
         } else {
-            format!("{:.1}%", metrics.successful_commits as f64 / denominator * 100.0)
+            format!(
+                "{:.1}%",
+                metrics.successful_commits as f64 / denominator * 100.0
+            )
         }
     };
     println!("✓ Success rate: {}", success_rate);
