@@ -1,0 +1,41 @@
+{
+  "_comment": "Baseline of LaunchOps hard-gate pass/fail state as of 2026-04-23. CI gate (scripts/ci/verify_launchops_gates_baseline.sh) compares .launchops/gates.json against this file and fails on: (a) any gate flipping pass -> fail (hard regression), or (b) any baseline gate disappearing (definition change without review). Newly-passing gates and newly-added gates are flagged but do not fail the build; the baseline should be refreshed with UPDATE_BASELINE=1 in the same PR so the new floor is locked in. Mirrors the deep_red_flags baseline discipline.",
+  "gates": {
+    "bridge_replay_tests": {
+      "expected_status": "pass",
+      "accepted_reason": "Green as of 2026-04-23 mainnet-gating scan; must not regress."
+    },
+    "clippy_clean": {
+      "expected_status": "fail",
+      "accepted_reason": "Workspace-wide clippy broken pending Wave 0 cleanup (scorecard Gate 7 yellow). Baselined as fail; flip to pass when cargo clippy --workspace --all-targets -- -D warnings exits 0."
+    },
+    "cross_vm_atomic_tests": {
+      "expected_status": "pass",
+      "accepted_reason": "Green as of 2026-04-23; must not regress."
+    },
+    "dex_liquidity_lock_tests": {
+      "expected_status": "pass",
+      "accepted_reason": "Green as of 2026-04-23; must not regress."
+    },
+    "formatting_clean": {
+      "expected_status": "fail",
+      "accepted_reason": "cargo fmt --all -- --check reports drift; baselined as fail pending Wave 0 formatting pass."
+    },
+    "no_p0_blockers": {
+      "expected_status": "pass",
+      "accepted_reason": "blockers.json is empty; must not regress without explicit review."
+    },
+    "no_production_stubs": {
+      "expected_status": "fail",
+      "accepted_reason": "227 critical red flags remain (scorecard Gate 6/7 red). Baselined as fail; the red_flags burn-down is owed before mainnet."
+    },
+    "workspace_compiles": {
+      "expected_status": "fail",
+      "accepted_reason": "cargo check --workspace --all-targets fails (pallet-x3-coin mocks + x3-integration EVM executor wiring). Scorecard Gate 7 yellow. Baselined as fail pending Wave 0 workspace burn-down."
+    },
+    "workspace_tests_pass": {
+      "expected_status": "fail",
+      "accepted_reason": "cargo test --workspace fails while workspace compile fails. Baselined as fail; will flip once workspace_compiles is green."
+    }
+  }
+}

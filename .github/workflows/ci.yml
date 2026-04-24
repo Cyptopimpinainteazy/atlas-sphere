@@ -70,6 +70,24 @@ jobs:
       - name: Verify LaunchOps deep_red_flags baseline
         run: bash scripts/ci/verify_launchops_deep_red_flags_baseline.sh
 
+      - name: Verify LaunchOps gates baseline
+        run: bash scripts/ci/verify_launchops_gates_baseline.sh
+
+      - name: Verify LaunchOps readiness baseline
+        run: bash scripts/ci/verify_launchops_readiness_baseline.sh
+
+      - name: Verify LaunchOps no-blockers invariant
+        run: bash scripts/ci/verify_launchops_no_blockers.sh
+
+      - name: Verify LaunchOps drift_flags baseline
+        run: bash scripts/ci/verify_launchops_drift_flags_baseline.sh
+
+      - name: Verify LaunchOps test_results baseline
+        run: bash scripts/ci/verify_launchops_test_results_baseline.sh
+
+      - name: Verify LaunchOps artifact_schemas baseline
+        run: bash scripts/ci/verify_launchops_artifact_schemas_baseline.sh
+
       - name: Summarize LaunchOps inventory
         if: always()
         run: |
@@ -169,6 +187,24 @@ jobs:
 
       - name: Verify LaunchOps deep_red_flags baseline
         run: bash scripts/ci/verify_launchops_deep_red_flags_baseline.sh
+
+      - name: Verify LaunchOps gates baseline
+        run: bash scripts/ci/verify_launchops_gates_baseline.sh
+
+      - name: Verify LaunchOps readiness baseline
+        run: bash scripts/ci/verify_launchops_readiness_baseline.sh
+
+      - name: Verify LaunchOps no-blockers invariant
+        run: bash scripts/ci/verify_launchops_no_blockers.sh
+
+      - name: Verify LaunchOps drift_flags baseline
+        run: bash scripts/ci/verify_launchops_drift_flags_baseline.sh
+
+      - name: Verify LaunchOps test_results baseline
+        run: bash scripts/ci/verify_launchops_test_results_baseline.sh
+
+      - name: Verify LaunchOps artifact_schemas baseline
+        run: bash scripts/ci/verify_launchops_artifact_schemas_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
