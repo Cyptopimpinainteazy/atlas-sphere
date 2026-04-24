@@ -190,6 +190,8 @@ jobs:
         run: bash scripts/ci/verify_launchops_runtime_rpc_inventory_baseline.sh
       - name: Verify LaunchOps feature_matrix baseline
         run: bash scripts/ci/verify_launchops_feature_matrix_baseline.sh
+      - name: Verify genesis allocations baseline
+        run: bash scripts/ci/verify_genesis_allocations_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
