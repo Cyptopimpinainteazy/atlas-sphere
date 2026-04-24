@@ -188,6 +188,8 @@ jobs:
         run: bash scripts/ci/verify_launchops_rpc_consumer_contracts_baseline.sh
       - name: Verify LaunchOps runtime_rpc_inventory baseline
         run: bash scripts/ci/verify_launchops_runtime_rpc_inventory_baseline.sh
+      - name: Verify LaunchOps feature_matrix baseline
+        run: bash scripts/ci/verify_launchops_feature_matrix_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()

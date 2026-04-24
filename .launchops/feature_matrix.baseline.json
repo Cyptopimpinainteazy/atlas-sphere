@@ -1,0 +1,43 @@
+{
+  "_comment": "Governance baseline for .launchops/feature_matrix.json. Pins total feature count and distributions across status, risk, module, and status x risk. Any bucket delta requires review. Add a key under accepted_reasons keyed by '<dimension>:<bucket>' when the delta is intentional. Regenerate with UPDATE_BASELINE=1.",
+  "total": 12789,
+  "status": {
+    "implemented": 423,
+    "missing": 59,
+    "specified_only": 24,
+    "tested": 12283
+  },
+  "risk": {
+    "critical": 366,
+    "high": 1002,
+    "low": 10756,
+    "medium": 665
+  },
+  "module": {
+    "bridge": 417,
+    "consensus": 433,
+    "cross_vm": 203,
+    "dex": 169,
+    "docs": 10128,
+    "gpu_validator": 444,
+    "launch_ops": 480,
+    "security": 310,
+    "universal_asset_kernel": 60,
+    "wallet_explorer": 145
+  },
+  "status_risk": {
+    "implemented|high": 4,
+    "implemented|low": 416,
+    "implemented|medium": 3,
+    "missing|high": 4,
+    "missing|low": 54,
+    "missing|medium": 1,
+    "specified_only|low": 21,
+    "specified_only|medium": 3,
+    "tested|critical": 366,
+    "tested|high": 994,
+    "tested|low": 10265,
+    "tested|medium": 658
+  },
+  "accepted_reasons": {}
+}
