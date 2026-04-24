@@ -91,6 +91,8 @@ jobs:
         run: bash scripts/ci/verify_launchops_stale_docs_baseline.sh
       - name: Verify LaunchOps red_flags baseline
         run: bash scripts/ci/verify_launchops_red_flags_baseline.sh
+      - name: Verify LaunchOps requirement_conflicts baseline
+        run: bash scripts/ci/verify_launchops_requirement_conflicts_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
@@ -213,6 +215,8 @@ jobs:
         run: bash scripts/ci/verify_launchops_stale_docs_baseline.sh
       - name: Verify LaunchOps red_flags baseline
         run: bash scripts/ci/verify_launchops_red_flags_baseline.sh
+      - name: Verify LaunchOps requirement_conflicts baseline
+        run: bash scripts/ci/verify_launchops_requirement_conflicts_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
