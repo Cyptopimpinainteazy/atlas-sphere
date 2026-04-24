@@ -111,6 +111,8 @@ jobs:
         run: bash scripts/ci/verify_sbom_baseline.sh runtime/x3-chain-runtime.cdx.json runtime/x3-chain-runtime.cdx.baseline.json
       - name: Verify runtime identity baseline
         run: bash scripts/ci/verify_runtime_identity_baseline.sh runtime/src/lib.rs runtime/runtime-identity.baseline.json
+      - name: Verify pallet-svm SBOM baseline
+        run: bash scripts/ci/verify_sbom_baseline.sh pallets/svm-runtime/pallet-svm.cdx.json pallets/svm-runtime/pallet-svm.cdx.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
@@ -253,6 +255,8 @@ jobs:
         run: bash scripts/ci/verify_sbom_baseline.sh runtime/x3-chain-runtime.cdx.json runtime/x3-chain-runtime.cdx.baseline.json
       - name: Verify runtime identity baseline
         run: bash scripts/ci/verify_runtime_identity_baseline.sh runtime/src/lib.rs runtime/runtime-identity.baseline.json
+      - name: Verify pallet-svm SBOM baseline
+        run: bash scripts/ci/verify_sbom_baseline.sh pallets/svm-runtime/pallet-svm.cdx.json pallets/svm-runtime/pallet-svm.cdx.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
