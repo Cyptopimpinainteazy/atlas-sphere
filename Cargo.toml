@@ -92,9 +92,10 @@ members = [
     "pallets/x3-invariants",
     # Concrete implementations of x3-vm BalanceProvider + CrossVmEscrow for node use
     "crates/x3-bridge-adapters",
-        "crates/cross-chain-position-manager",
+    "crates/cross-chain-position-manager",
     "crates/x3-rpc",
-    # Note: crates/dylint-determinism is intentionally NOT listed here.
+        # Phase 4.5: Liquidity, Inventory, and Solvency control plane
+        # Note: crates/dylint-determinism is intentionally NOT listed here.
     # It is a standalone workspace (has its own [workspace] and rust-toolchain.toml)
     # compiled by `cargo dylint` with nightly+rustc-dev via workspace.metadata.dylint.
 ]
@@ -179,6 +180,9 @@ log = { version = "0.4.20", default-features = false }
 serde = { version = "1.0.195", features = ["derive"], default-features = false }
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-session = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-staking = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-offences = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 
 # Substrate client (node) workspace deps used by `node` member
 sc-basic-authorship = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -288,6 +292,8 @@ errno = { path = "patches/errno" }
 ar_archive_writer = { path = "patches/ar_archive_writer" }
 # Fix getrandom for wasm32-unknown-unknown (Substrate WASM runtime)
 getrandom = { path = "patches/getrandom" }
+# core2 0.4.0 was yanked from crates.io; pin to local copy.
+core2 = { path = "patches/core2" }
 # Patch native crates that pulled getrandom 0.3/0.4 back down to 0.2.17
 fastbloom = { path = "patches/fastbloom" }
 jobserver = { path = "patches/jobserver" }
