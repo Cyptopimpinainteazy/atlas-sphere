@@ -218,6 +218,15 @@ impl CrmDb {
                 active          INTEGER DEFAULT 1
             );
 
+            /* ── Users ── */
+            CREATE TABLE IF NOT EXISTS crm_users (
+                id          TEXT PRIMARY KEY,
+                username    TEXT NOT NULL UNIQUE,
+                role        TEXT NOT NULL DEFAULT 'user',
+                created_at  TEXT NOT NULL,
+                updated_at  TEXT NOT NULL
+            );
+
             /* ── User Proxy Assignments ── */
             CREATE TABLE IF NOT EXISTS crm_user_proxies (
                 id          TEXT PRIMARY KEY,
@@ -237,6 +246,7 @@ impl CrmDb {
             CREATE INDEX IF NOT EXISTS idx_crm_lead_funnel_stage ON crm_lead_funnel(funnel_stage);
             CREATE INDEX IF NOT EXISTS idx_crm_user_emails_user ON crm_user_emails(user_id);
             CREATE INDEX IF NOT EXISTS idx_crm_user_proxies_user ON crm_user_proxies(user_id);
+            CREATE INDEX IF NOT EXISTS idx_crm_users_username ON crm_users(username);
 
             /* ── v2: Contact sorting fields ── */
             /* SQLite ALTER TABLE ADD COLUMN is idempotent-safe with IF NOT EXISTS absent,
