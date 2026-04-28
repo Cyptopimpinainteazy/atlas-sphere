@@ -154,10 +154,11 @@ This document provides the final release decision checklist for X3 Chain v1.1. I
   - Includes: Quick start examples, troubleshooting, integration with launchers
 
 - [x] **Release artifacts prepared**
-  - Status: ✅ COMPLETE — `x3-chain-v1.1-release.tar.gz` generated (2026-03-24)
-  - CHECKSUMS.sha256 with SHA-256 for node binary, WASM, and tarball
-  - CHECKSUMS.sha256.asc — GPG detached signature (X3 Chain Release <release@x3-chain.io>)
-  - Signature verified: `gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256` → Good signature
+  - Status: ✅ COMPLETE — release bundle and checksum flow documented
+  - Primary command: `bash scripts/x3_release_sign.sh --skip-build --release-dir .artifacts/release-v1.1 --version v1.1.1`
+  - Signed variant: `bash scripts/x3_release_sign.sh --skip-build --release-dir .artifacts/release-v1.1 --version v1.1.1 --sign-key <gpg-key-id>`
+  - Verification: `bash scripts/x3_release_sign.sh --verify .artifacts/release-v1.1`
+  - Outputs: `.artifacts/release-v1.1/`, `.artifacts/release-v1.1/CHECKSUMS.bundle.sha256`, `.artifacts/x3-chain-v1.1.1.tar.gz`, `CHECKSUMS.sha256`, optional `CHECKSUMS.sha256.asc`
 
 ---
 
@@ -275,7 +276,7 @@ Time 3:00   Finalized: 10+ (finality advancing)
 Once Phase 08-01 and 08-02 validation complete, generate:
 
 ```
-x3-chain-v1.1-release.tar.gz
+x3-chain-v1.1.1.tar.gz
 ├── x3-chain-node (binary)
 ├── runtime/ (WASM bundle)
 ├── scripts/

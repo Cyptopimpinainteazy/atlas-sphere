@@ -21,7 +21,7 @@ X3 Chain v1.1 is now available for testnet deployment. This release includes cri
 
 ### Release Package
 
-- **File:** `x3-chain-v1.1-release.tar.gz`
+- **File:** `x3-chain-v1.1.1.tar.gz`
 - **Contents:**
   - Node binary (x3-chain-node, 54 MB)
   - Runtime WASM (824 KB)
@@ -32,14 +32,15 @@ X3 Chain v1.1 is now available for testnet deployment. This release includes cri
 
 ### Cryptographic Verification
 
-**CHECKSUMS.sha256** — Three SHA-256 hashes for:
+**CHECKSUMS.sha256** — Signed SHA-256 hash for the complete release package (`x3-chain-v1.1.1.tar.gz`)
+
+**CHECKSUMS.bundle.sha256** — SHA-256 hashes for the extracted bundle contents:
 1. Node binary
 2. Runtime WASM
-3. Complete release package
 
 **CHECKSUMS.sha256.asc** — GPG detached signature (signed by X3 Chain Release key)
 
-**Action Required:** Verify both before deploying
+**Action Required:** Verify the tarball before extraction, then verify the extracted bundle contents
 ```bash
 sha256sum -c CHECKSUMS.sha256
 gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
@@ -64,13 +65,14 @@ gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
    # In directory with release artifacts:
    sha256sum -c CHECKSUMS.sha256
    gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
+
+   rm -rf /tmp/x3-chain-release && mkdir -p /tmp/x3-chain-release
+   tar -xzf x3-chain-v1.1.1.tar.gz -C /tmp/x3-chain-release
+   (cd /tmp/x3-chain-release && sha256sum -c CHECKSUMS.bundle.sha256)
    ```
 
 2. **Run Pre-Deployment Health Check** (5 min)
    ```bash
-   rm -rf /tmp/x3-chain-release && mkdir -p /tmp/x3-chain-release
-   tar -xzf x3-chain-v1.1-release.tar.gz -C /tmp/x3-chain-release
-   
    NODE_NAME=my-validator \
    bash /tmp/x3-chain-release/scripts/x3_node_healthcheck.sh --mode prod
    ```
@@ -84,7 +86,7 @@ gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
 3. **Extract and Prepare** (5 min)
    ```bash
    sudo mkdir -p /opt/x3-chain
-   sudo tar -xzf x3-chain-v1.1-release.tar.gz -C /opt/x3-chain
+   sudo tar -xzf x3-chain-v1.1.1.tar.gz -C /opt/x3-chain
    sudo chmod +x /opt/x3-chain/x3-chain-node /opt/x3-chain/scripts/*.sh
    ```
 

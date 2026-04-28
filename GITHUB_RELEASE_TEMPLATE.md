@@ -24,9 +24,7 @@ X3 Chain v1.1 completes the dual-EVM/SVM blockchain runtime with production-hard
 ### Checksums
 
 ```
-d482a05568580a381b3c4cf1e238c47d18334e23b4bf5744bdfe8c808a54e162  x3-chain-node
-8c5c1ac4a6bdb67d7e13e9aa9c711eaba2aedab912852c3f4de1275d472ac7af  x3_chain_runtime.compact.compressed.wasm
-1e545399b03ae2ca9c6bea91bd1b1ebce2997b2960b7c34194d487545c51bf23  x3-chain-v1.1-release.tar.gz
+08963239d56c0524d97c67c9b779d8bb42b169bfc3317fe6c5d3fe7f2aa31709  x3-chain-v1.1.1.tar.gz
 ```
 
 ### Signature Verification
@@ -35,22 +33,25 @@ d482a05568580a381b3c4cf1e238c47d18334e23b4bf5744bdfe8c808a54e162  x3-chain-node
 # Verify GPG signature (release key: X3 Chain Release <release@x3-chain.io>)
 gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
 
-# Verify all artifacts
+# Verify distributable tarball
 sha256sum -c CHECKSUMS.sha256
+
+# After extraction, verify the extracted bundle contents
+sha256sum -c CHECKSUMS.bundle.sha256
 ```
 
 ---
 
 ## Downloads
 
-- **Release Package:** `x3-chain-v1.1-release.tar.gz`
+- **Release Package:** `x3-chain-v1.1.1.tar.gz`
   - Binary: `x3-chain-node` (54 MB)
   - Runtime: `x3_chain_runtime.compact.compressed.wasm` (824 KB)
   - Scripts: `run-dev-node.sh`, `run-production-node.sh`, `x3_node_healthcheck.sh`
   - Docs: Complete operator SOP, development guide, node requirements
   - Config: Chain specs for local/testnet networks + `.env.example`
 
-- **Checksums:** `CHECKSUMS.sha256`, `CHECKSUMS.sha256.asc`
+- **Checksums:** `CHECKSUMS.sha256`, `CHECKSUMS.sha256.asc`, `CHECKSUMS.bundle.sha256` (inside the extracted bundle)
 
 ---
 
@@ -61,11 +62,14 @@ sha256sum -c CHECKSUMS.sha256
 ```bash
 # Extract release
 rm -rf /tmp/x3-chain-release && mkdir -p /tmp/x3-chain-release
-tar -xzf x3-chain-v1.1-release.tar.gz -C /tmp/x3-chain-release
+tar -xzf x3-chain-v1.1.1.tar.gz -C /tmp/x3-chain-release
 
-# Verify integrity
+# Verify tarball + signature
 sha256sum -c CHECKSUMS.sha256
 gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
+
+# Verify extracted bundle contents
+(cd /tmp/x3-chain-release && sha256sum -c CHECKSUMS.bundle.sha256)
 
 # Run health check
 NODE_NAME=my-node bash /tmp/x3-chain-release/scripts/x3_node_healthcheck.sh --mode prod
@@ -81,12 +85,13 @@ CHAIN=dev ./scripts/run-dev-node.sh
    ```bash
    sha256sum -c CHECKSUMS.sha256
    gpg --verify CHECKSUMS.sha256.asc CHECKSUMS.sha256
+  (cd /opt/x3-chain && sha256sum -c CHECKSUMS.bundle.sha256)
    ```
 
 2. **Extract and prepare:**
    ```bash
   sudo mkdir -p /opt/x3-chain
-  sudo tar -xzf x3-chain-v1.1-release.tar.gz -C /opt/x3-chain
+  sudo tar -xzf x3-chain-v1.1.1.tar.gz -C /opt/x3-chain
   sudo chmod +x /opt/x3-chain/x3-chain-node /opt/x3-chain/scripts/*.sh
    ```
 
