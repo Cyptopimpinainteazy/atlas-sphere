@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! Analytics Service for X3 Chain
 //!
 //! Production-ready analytics backend with:
