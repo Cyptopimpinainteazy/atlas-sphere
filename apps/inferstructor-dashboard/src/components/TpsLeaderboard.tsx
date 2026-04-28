@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { api } from '../api';
 import type { TpsLeaderboardEntry, TpsLeaderboardResponse, TpsBenchmarkStatus, RpcPoolStats } from '../api';
 import { ArrowLeft, Trophy, Zap, Clock, Globe, TrendingUp, Activity, Timer, ChevronUp, ChevronDown, RefreshCw, Flame } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface TpsLeaderboardProps {
   onBack: () => void;
@@ -30,6 +29,8 @@ const ECOSYSTEM_LABELS: Record<string, string> = {
   move: 'Move',
   other: 'Other',
 };
+
+const TpsLeaderboardChart = lazy(() => import('./TpsLeaderboardChart').then(module => ({ default: module.TpsLeaderboardChart })));
 
 export function TpsLeaderboard({ onBack }: TpsLeaderboardProps) {
   const [data, setData] = useState<TpsLeaderboardResponse | null>(null);
@@ -268,29 +269,18 @@ export function TpsLeaderboard({ onBack }: TpsLeaderboardProps) {
 
         {/* TPS Bar Chart — Top 20 */}
         {chartData.length > 0 && (
-          <div className="card mb-6">
-            <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">
-              🏆 Top {Math.min(20, chartData.length)} — TPS Distribution
-            </h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={10} angle={-30} textAnchor="end" height={60} />
-                  <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }}
-                    formatter={(value: any) => [`${Number(value).toLocaleString()} TPS`, 'TPS']}
-                  />
-                  <Bar dataKey="tps" radius={[4, 4, 0, 0]} name="TPS">
-                    {chartData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          <Suspense
+            fallback={(
+              <div className="card mb-6">
+                <div className="flex items-center gap-2 text-sm text-gray-300">
+                  <RefreshCw className="h-4 w-4 animate-spin text-blue-400" />
+                  Loading TPS chart...
+                </div>
+              </div>
+            )}
+          >
+            <TpsLeaderboardChart chartData={chartData} />
+          </Suspense>
         )}
 
         {/* Leaderboard Table */}

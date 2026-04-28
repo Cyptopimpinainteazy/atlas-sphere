@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Shield, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../api';
+import { validatePassword } from '../utils/validation';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -11,16 +12,29 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) return;
+    
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) {
+      setValidationError('Password is required');
+      return;
+    }
+
+    const passwordValidation = validatePassword(trimmedPassword);
+    if (!passwordValidation.valid) {
+      setValidationError(passwordValidation.error || 'Invalid password');
+      return;
+    }
 
     setLoading(true);
     setError(null);
+    setValidationError(null);
 
     try {
-      await api.adminLogin(password);
+      await api.adminLogin(trimmedPassword);
       onLoginSuccess();
     } catch {
       setError('Invalid admin password');
@@ -50,23 +64,33 @@ export function AdminLogin({ onLoginSuccess, onBack }: AdminLoginProps) {
             </div>
           )}
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Admin Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50"
-                placeholder="Enter admin password"
-                autoFocus
-                autoComplete="current-password"
-              />
-            </div>
-          </div>
+           <div className="mb-6">
+             <label className="block text-sm font-medium text-gray-300 mb-2">
+               Admin Password
+             </label>
+             <div className="relative">
+               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+               <input
+                 type="password"
+                 value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 className={`w-full pl-10 pr-4 py-3 bg-gray-800/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-colors ${
+                   validationError
+                     ? 'border-red-500 bg-red-500/5 focus:border-red-500 focus:ring-red-500/50'
+                     : 'border-gray-600 focus:border-red-500 focus:ring-red-500/50'
+                 }`}
+                 placeholder="Enter admin password"
+                 autoFocus
+                 autoComplete="current-password"
+               />
+             </div>
+             {validationError && (
+               <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                 <AlertCircle className="w-4 h-4" />
+                 {validationError}
+               </p>
+             )}
+           </div>
 
           <button
             type="submit"

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { APIClient } from './api-client';
 
 const API_BASE = import.meta.env.VITE_X3_API_URL || 'https://api.x3star.net';
 const REGISTRY_URL = import.meta.env.VITE_REGISTRY_URL || API_BASE;
@@ -6,6 +7,13 @@ const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || API_BASE;
 const RPC_PROXY_URL = import.meta.env.VITE_RPC_PROXY_URL || API_BASE;
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || API_BASE;
 const CHAIN_DB_URL = import.meta.env.VITE_CHAIN_DB_URL || API_BASE;
+
+// GPU lane URLs from environment (configurable per deployment)
+const GPU_LANE_URLS = [
+  import.meta.env.VITE_GPU_LANE_1_URL || 'http://localhost:9001/health',
+  import.meta.env.VITE_GPU_LANE_2_URL || 'http://localhost:9002/health',
+  import.meta.env.VITE_GPU_LANE_3_URL || 'http://localhost:9003/health',
+];
 
 export interface ValidatorCredentials {
   validator_id: string;
@@ -212,73 +220,257 @@ export interface AccountingSummary {
   blacklist_count: number;
 }
 
+export interface OrchestraIntent {
+  intent_id: string;
+  tenant_id: string;
+  kind: string;
+  status: string;
+  risk_class: string;
+  submitter: string;
+  requires_approval: boolean;
+  payload: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApprovalCase {
+  case_id: string;
+  intent_id: string;
+  status: string;
+  review_kind: string;
+  requested_by: string;
+  summary: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VoteWindow {
+  window_id: string;
+  approval_case_id: string;
+  title: string;
+  status: string;
+  opens_at_unix: number;
+  closes_at_unix: number;
+  electorate: string[] | Record<string, unknown>;
+  tally: {
+    approvals?: number;
+    rejections?: number;
+    abstentions?: number;
+    [key: string]: unknown;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VoteTally {
+  approvals: number;
+  rejections: number;
+  abstentions: number;
+  [key: string]: unknown;
+}
+
+export interface EvidenceBundle {
+  bundle_id: string;
+  intent_id: string | null;
+  approval_case_id: string | null;
+  vote_window_id: string | null;
+  artifact_uri: string;
+  digest: string;
+  summary: {
+    action?: string;
+    detail?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BenchmarkReport {
+  report_id: string;
+  generated_at_unix: number;
+  profile: string;
+  chain_name: string;
+  recommendation: string;
+  signer: string;
+  workload_profile: {
+    total_transactions: number;
+    [key: string]: unknown;
+  };
+  artifacts: Array<{
+    artifact_type: string;
+    uri: string;
+    digest: string;
+    [key: string]: unknown;
+  }>;
+  [key: string]: unknown;
+}
+
+export interface VoteWindowClosureResponse {
+  vote_window: VoteWindow;
+  approval_case: ApprovalCase;
+  evidence: EvidenceBundle;
+}
+
 class InferstructorAPI {
   private jwtToken: string | null = null;
-  private apiKey: string | null = null;
+  private apiKey: string | null = null; // Only in memory, never persisted
   private adminToken: string | null = null;
+  private csrfToken: string | null = null; // CSRF token for admin endpoints
+  private apiClient = new APIClient();
+  private validatorId: string | null = null; // In memory only
 
   constructor() {
-    // Load from localStorage
-    this.jwtToken = localStorage.getItem('infra_jwt_token');
-    this.apiKey = localStorage.getItem('infra_api_key');
+    // Security: Load JWT ONLY from sessionStorage (clears on browser tab close)
+    // API key is NEVER persisted - user must re-enter on each login
+    this.jwtToken = this.validateAndLoadToken(sessionStorage.getItem('infra_jwt_token'));
+    
+    // Load validator ID (non-sensitive, can persist)
+    this.validatorId = sessionStorage.getItem('infra_validator_id');
+    
     // Admin token uses sessionStorage (clears on browser close)
     this.adminToken = sessionStorage.getItem('infra_admin_token');
+    
+    // CSRF token for admin endpoints (in memory only, fetched fresh on admin login)
+    this.csrfToken = sessionStorage.getItem('infra_csrf_token') || null;
+    
+    // Setup axios interceptors for token injection and error handling
+    APIClient.createInterceptor(axios);
+  }
+
+  /**
+   * Validate JWT before loading (check basic structure)
+   */
+  private validateAndLoadToken(token: string | null): string | null {
+    if (!token) return null;
+    
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.warn('Invalid JWT format');
+        return null;
+      }
+      return token;
+    } catch {
+      return null;
+    }
   }
 
   // Registration
   async register(chain: string, email: string, slaTier: string = 'pro'): Promise<ValidatorCredentials> {
-    const response = await axios.post(`${REGISTRY_URL}/api/validators/register`, {
-      chain,
-      email,
-      sla_tier: slaTier,
-    });
-    
-    if (response.data.success && response.data.credentials) {
-      const creds = response.data.credentials;
+    return this.apiClient.withRetry(async () => {
+      const response = await axios.post(`${REGISTRY_URL}/api/validators/register`, {
+        chain,
+        email,
+        sla_tier: slaTier,
+      });
       
-      // Store credentials
-      localStorage.setItem('infra_api_key', creds.api_key);
-      localStorage.setItem('infra_validator_id', creds.validator_id);
-      if (creds.jwt_token) {
-        localStorage.setItem('infra_jwt_token', creds.jwt_token);
-        this.jwtToken = creds.jwt_token;
+      if (response.data.success && response.data.credentials) {
+        const creds = response.data.credentials;
+        
+        // Security: Store ONLY JWT in sessionStorage (clears on tab close)
+        if (creds.jwt_token) {
+          sessionStorage.setItem('infra_jwt_token', creds.jwt_token);
+          this.jwtToken = creds.jwt_token;
+        }
+        
+        // Store validator ID (non-sensitive)
+        sessionStorage.setItem('infra_validator_id', creds.validator_id);
+        this.validatorId = creds.validator_id;
+        
+        // API key stored in memory only - NOT persisted
+        this.apiKey = creds.api_key;
+        
+        return creds;
       }
-      this.apiKey = creds.api_key;
       
-      return creds;
-    }
-    
-    throw new Error('Registration failed');
+      throw new Error('Registration failed');
+    });
   }
 
   // Login
   async login(apiKey: string, apiSecret: string): Promise<ValidatorCredentials> {
-    const response = await axios.post(`${REGISTRY_URL}/api/validators/login`, {
-      api_key: apiKey,
-      api_secret: apiSecret,
+    return this.apiClient.withRetry(async () => {
+      const response = await axios.post(`${REGISTRY_URL}/api/validators/login`, {
+        api_key: apiKey,
+        api_secret: apiSecret,
+      });
+      
+      if (response.data.success) {
+        this.jwtToken = response.data.token;
+        this.validatorId = response.data.validator.id;
+        
+        // Security: Store ONLY JWT in sessionStorage (clears on tab close)
+        sessionStorage.setItem('infra_jwt_token', this.jwtToken!);
+        sessionStorage.setItem('infra_validator_id', response.data.validator.id);
+        
+        // API key stored in memory only - NOT persisted
+        this.apiKey = apiKey;
+        
+        return response.data;
+      }
+      
+      throw new Error('Login failed');
     });
-    
-    if (response.data.success) {
-      this.jwtToken = response.data.token;
-      this.apiKey = apiKey;
-      
-      localStorage.setItem('infra_jwt_token', this.jwtToken!);
-      localStorage.setItem('infra_api_key', apiKey);
-      localStorage.setItem('infra_validator_id', response.data.validator.id);
-      
-      return response.data;
-    }
-    
-    throw new Error('Login failed');
   }
 
   // Logout
   logout() {
     this.jwtToken = null;
     this.apiKey = null;
-    localStorage.removeItem('infra_jwt_token');
-    localStorage.removeItem('infra_api_key');
-    localStorage.removeItem('infra_validator_id');
+    this.validatorId = null;
+    sessionStorage.removeItem('infra_jwt_token');
+    sessionStorage.removeItem('infra_validator_id');
+  }
+
+  /**
+   * Get the current JWT token
+   */
+  getJWTToken(): string | null {
+    return this.jwtToken;
+  }
+
+  /**
+   * Get the current API key (in-memory only)
+   */
+  getAPIKey(): string | null {
+    return this.apiKey;
+  }
+
+  /**
+   * Get the current validator ID
+   */
+  getValidatorId(): string | null {
+    return this.validatorId;
+  }
+
+  /**
+   * Refresh JWT token using existing JWT (no need for api_secret)
+   */
+  async refreshToken(): Promise<boolean> {
+    if (!this.jwtToken) return false;
+    
+    try {
+      const response = await axios.post(
+        `${REGISTRY_URL}/api/validators/refresh-token`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${this.jwtToken}` }
+        }
+      );
+      
+      if (response.data.success && response.data.token) {
+        this.jwtToken = response.data.token;
+        sessionStorage.setItem('infra_jwt_token', this.jwtToken!);
+        console.log('Token refreshed successfully');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      return false;
+    }
   }
 
   // Get validator stats
@@ -287,63 +479,113 @@ class InferstructorAPI {
       throw new Error('Not authenticated');
     }
     
-    const response = await axios.get(`${REGISTRY_URL}/api/validators/stats`, {
-      headers: {
-        Authorization: `Bearer ${this.jwtToken}`,
-      },
+    return this.apiClient.withRetry(async () => {
+      const response = await axios.get(`${REGISTRY_URL}/api/validators/stats`, {
+        headers: {
+          Authorization: `Bearer ${this.jwtToken}`,
+        },
+      });
+      return response.data;
     });
-    
-    return response.data;
   }
 
   // Get bridge stats
   async getBridgeStats(): Promise<BridgeStats> {
-    const response = await axios.get(`${BRIDGE_URL}/stats`);
-    return response.data;
+    return this.apiClient.withRetry(async () => {
+      const response = await axios.get(`${BRIDGE_URL}/stats`);
+      return response.data;
+    });
   }
 
   // Get GPU lane health from all 3 lanes
   async getGPULaneStats(): Promise<GPULaneHealth[]> {
-    const laneUrls = [
-      'http://localhost:9001/health',
-      'http://localhost:9002/health',
-      'http://localhost:9003/health',
-    ];
-    
-    const results = await Promise.allSettled(
-      laneUrls.map(url => axios.get(url).then(r => r.data))
-    );
-    
-    return results
-      .filter((r): r is PromiseFulfilledResult<GPULaneHealth> => r.status === 'fulfilled')
-      .map(r => r.value);
+    return this.apiClient.withRetry(async () => {
+      const results = await Promise.allSettled(
+        GPU_LANE_URLS.map(url => axios.get(url).then(r => r.data))
+      );
+      
+      return results
+        .filter((r): r is PromiseFulfilledResult<GPULaneHealth> => r.status === 'fulfilled')
+        .map(r => r.value);
+    });
   }
 
   // Get Solana chain stats from GPU RPC proxy
   async getChainStats(): Promise<ChainStats> {
-    const response = await axios.get(`${RPC_PROXY_URL}/chain-stats`);
-    return response.data;
+    return this.apiClient.withRetry(async () => {
+      const response = await axios.get(`${RPC_PROXY_URL}/chain-stats`);
+      return response.data;
+    });
   }
 
   // ── Admin API ──
 
   private adminHeaders() {
-    return { 'Authorization': `Bearer ${this.adminToken || ''}` };
+    const headers: Record<string, string> = { 'Authorization': `Bearer ${this.adminToken || ''}` };
+    // Include CSRF token if available
+    if (this.csrfToken) {
+      headers['X-CSRF-Token'] = this.csrfToken;
+    }
+    return headers;
+  }
+
+  private operatorHeaders() {
+    if (!this.adminToken) {
+      return undefined;
+    }
+    return this.adminHeaders();
+  }
+
+  /**
+   * Fetch CSRF token for admin endpoints
+   */
+  private async fetchCSRFToken(): Promise<string | null> {
+    try {
+      const response = await axios.get(`${ADMIN_URL}/admin/csrf-token`);
+      if (response.data.token && typeof response.data.token === 'string') {
+        this.csrfToken = response.data.token;
+        sessionStorage.setItem('infra_csrf_token', response.data.token);
+        return this.csrfToken;
+      }
+    } catch (error) {
+      console.warn('Failed to fetch CSRF token:', error);
+    }
+    return null;
   }
 
   async adminLogin(password: string): Promise<{ token: string; expires_in: number }> {
-    const response = await axios.post(`${ADMIN_URL}/admin/login`, { password });
-    if (response.data.success) {
-      this.adminToken = response.data.token;
-      sessionStorage.setItem('infra_admin_token', this.adminToken!);
-      return response.data;
+    try {
+      // Step 1: Fetch CSRF token first
+      await this.fetchCSRFToken();
+      
+      // Step 2: Send login request with CSRF token
+      const response = await axios.post(
+        `${ADMIN_URL}/admin/login`,
+        { password },
+        { headers: { 'X-CSRF-Token': this.csrfToken || '' } }
+      );
+      
+      if (response.data.success) {
+        this.adminToken = response.data.token;
+        sessionStorage.setItem('infra_admin_token', this.adminToken!);
+        
+        // Fetch fresh CSRF token after successful login
+        await this.fetchCSRFToken();
+        
+        return response.data;
+      }
+      throw new Error('Admin login failed');
+    } catch (error) {
+      this.adminLogout();
+      throw error;
     }
-    throw new Error('Admin login failed');
   }
 
   adminLogout() {
     this.adminToken = null;
+    this.csrfToken = null;
     sessionStorage.removeItem('infra_admin_token');
+    sessionStorage.removeItem('infra_csrf_token');
   }
 
   isAdminAuthenticated(): boolean {
@@ -480,6 +722,69 @@ class InferstructorAPI {
     return response.data;
   }
 
+  // ── Orchestra Operator Views ──
+
+  async listOrchestraIntents(limit: number = 50, offset: number = 0): Promise<OrchestraIntent[]> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const response = await axios.get(`${API_BASE}/api/v1/orchestra/intents?${params}`, {
+      headers: this.operatorHeaders(),
+    });
+    return response.data;
+  }
+
+  async listApprovalCases(limit: number = 50, offset: number = 0): Promise<ApprovalCase[]> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const response = await axios.get(`${API_BASE}/api/v1/orchestra/approval-cases?${params}`, {
+      headers: this.operatorHeaders(),
+    });
+    return response.data;
+  }
+
+  async listVoteWindows(limit: number = 50, offset: number = 0): Promise<VoteWindow[]> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const response = await axios.get(`${API_BASE}/api/v1/orchestra/vote-windows?${params}`, {
+      headers: this.operatorHeaders(),
+    });
+    return response.data;
+  }
+
+  async listEvidenceBundles(limit: number = 50, offset: number = 0): Promise<EvidenceBundle[]> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const response = await axios.get(`${API_BASE}/api/v1/orchestra/evidence-bundles?${params}`, {
+      headers: this.operatorHeaders(),
+    });
+    return response.data;
+  }
+
+  async closeVoteWindow(windowId: string): Promise<VoteWindowClosureResponse> {
+    const response = await axios.post(
+      `${API_BASE}/api/v1/orchestra/vote-windows/${encodeURIComponent(windowId)}/close`,
+      {},
+      { headers: this.operatorHeaders() },
+    );
+    return response.data;
+  }
+
+  async importVoteWindowTally(windowId: string): Promise<VoteTally> {
+    const response = await axios.post(
+      `${API_BASE}/api/v1/orchestra/vote-windows/${encodeURIComponent(windowId)}/imported-tally`,
+      {},
+      { headers: this.operatorHeaders() },
+    );
+    return response.data;
+  }
+
+  async getBenchmarkReports(limit: number = 20, offset: number = 0): Promise<BenchmarkReport[]> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      sort_by: 'generated_at',
+      sort_order: 'desc',
+    });
+    const response = await axios.get(`${API_BASE}/api/v1/benchmarks/reports?${params}`);
+    return response.data;
+  }
+
   // Test connection
   async testConnection(): Promise<boolean> {
     if (!this.apiKey) {
@@ -505,10 +810,6 @@ class InferstructorAPI {
 
   getApiKey(): string | null {
     return this.apiKey;
-  }
-
-  getValidatorId(): string | null {
-    return localStorage.getItem('infra_validator_id');
   }
 
   // ── Chain DB API (no auth required) ──
