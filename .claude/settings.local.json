@@ -22,5 +22,18 @@
       "Bash(python3:*)"
     ],
     "deny": []
-  }
+		},
+		"hooks": {
+			"SessionStart": [
+				{
+					"matcher": "",
+					"hooks": [
+						{
+							"type": "command",
+							"command": ""
+						}
+					]
+				}
+			]
+		}
 }
